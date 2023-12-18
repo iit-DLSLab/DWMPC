@@ -36,7 +36,7 @@ add_library(dwocp SHARED src/dwocp.cpp)
 #)
 
 # DWMPC library
-add_library(${PROJECT_NAME} src/dwmpc.cpp)# src/timer.cpp)
+add_library(${PROJECT_NAME} src/dwmpc.cpp src/timer.cpp)
 
 #target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/third-party/ndcurves/include)
 
