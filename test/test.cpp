@@ -3,7 +3,6 @@
 
 #include <dwmpc.hpp>
 
-
 int main(int argc, char** argv) {
   // Create an instance of dwmpc
   double dt = 0.01;
