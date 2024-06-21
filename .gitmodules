@@ -1,3 +1,6 @@
 [submodule "third_party/acados"]
 	path = third_party/acados
 	url = git@gitlab.advr.iit.it:dls-lab/dls2_acados.git
+[submodule "module/third_party/acados"]
+	path = module/third_party/acados
+	url = https://github.com/acados/acados.git

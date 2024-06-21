@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+echo "-- running pre-commit githook"
+
+git_branch=$(git rev-parse --abbrev-ref HEAD)
+if [ "$git_branch" = "master" ]; then
+	echo "-- updating project version on commit to master"
+	# ==========================================================================
+	# Project Root
+	# ==========================================================================
+	project_root=$(git rev-parse --show-toplevel)
+
+	# ==========================================================================
+	# Get the current version
+	# ==========================================================================
+	version=$(cat $project_root/version.txt)
+	version_major=$(echo $version | cut --delimiter='.' --field=1)
+	version_minor=$(echo $version | cut --delimiter='.' --field=2)
+	version_patch=$(echo $version | cut --delimiter='.' --field=3)
+
+	# ==========================================================================
+	# Upate the Version
+	# ==========================================================================
+	version_patch=$(( $version_patch + 1 ))
+	echo $version_major.$version_minor.$version_patch > $project_root/version.txt
+	git add $project_root/version.txt
+fi
