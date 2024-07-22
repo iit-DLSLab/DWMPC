@@ -144,4 +144,24 @@ namespace controllers
         }
         return safety_check;
     }
+    bool DwmpcConsoleCommands::goHandStand()
+    {
+        ptr->goHandStand();
+        return true;
+    }
+    bool DwmpcConsoleCommands::stopHandStand()
+    {
+        ptr->stopHandStand();
+        return true;
+    }
+    bool DwmpcConsoleCommands::setStepHeight()
+    {
+        double step_height{0.0};
+        bool result_step_height = dls::CommandHelper::readValue<double>("Step Height", step_height);
+        if(result_step_height)
+        {
+            ptr->setStepHeight(step_height);
+        }
+        return result_step_height;
+    }
 } //namespace controllers

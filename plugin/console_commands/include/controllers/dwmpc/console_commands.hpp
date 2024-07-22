@@ -33,6 +33,9 @@ namespace controllers
 		bool stopSine();
 		bool setSineParameter();
 		bool setWeight();
+		bool goHandStand();
+		bool stopHandStand();
+		bool setStepHeight();
 	};
 }
 #endif /* end of include guard: DWMPC_CONSOLE_COMMANDS_HPP */

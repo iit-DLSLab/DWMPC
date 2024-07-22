@@ -87,6 +87,11 @@ namespace controllers
         
         std::vector<double> terrain_height_; // terrain height for each leg
         std::map<std::string,std::vector<double>> weight_vec_; // cost function weights
+        // flag for biped trick
+        bool go_biped_{false};
+        bool bipedal_walk_{false};
+        double stand_up_time_{0.5};
+        double stand_up_timer_{0};
 
         Timer timer_; //timer to define the gait
         std::vector<bezier_curves_t> bcs_{4}; // TODO CHANGE THIS
