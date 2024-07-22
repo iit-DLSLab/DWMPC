@@ -748,4 +748,20 @@ namespace controllers
     {
         ocp_.prepare();
     }
+    void Dwmpc::goHandStand()
+    {
+        go_biped_ = true;
+    }
+    void Dwmpc::stopHandStand()
+    {   
+        //to do --- THIS NEED THE SAME TREATMENT AS THE GO HAND STAND 
+        timer_.stopTimer();
+        go_biped_ = false;
+        bipedal_walk_ = false;
+        stand_up_timer_ = 0.0;
+    }
+    void Dwmpc::setStepHeight(double step_height)
+    {
+        desired_["step_height"][0] = step_height;
+    }
 } //namespace controllers
