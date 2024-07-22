@@ -32,6 +32,15 @@ namespace controllers
         command_manager_ptr->addCommand(  "setWeight",
                                             "set weight",
                                             &DwmpcConsoleCommands::setWeight, this, {}, true);
+        command_manager_ptr->addCommand(  "goHandStand",
+                                            "go to a hand stand",
+                                            &DwmpcConsoleCommands::goHandStand, this, {}, true);
+        command_manager_ptr->addCommand(  "stopHandStand",
+                                            "stop to a hand stand",
+                                            &DwmpcConsoleCommands::stopHandStand, this, {}, true);
+        command_manager_ptr->addCommand(  "setStepHeight",
+                                            "set step height",
+                                            &DwmpcConsoleCommands::setStepHeight, this, {}, true);
     }
 
 	DwmpcConsoleCommands::~DwmpcConsoleCommands()

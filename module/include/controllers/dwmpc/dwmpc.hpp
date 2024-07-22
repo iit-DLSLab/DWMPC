@@ -71,7 +71,7 @@ namespace controllers
         std::map<std::string,std::vector<double>> getWeight(){return weight_vec_;};
         void goHandStand();
         void stopHandStand();
-        void setStepHeight(double step_height)
+        void setStepHeight(double step_height);
     private:
         YAML::Node config;
         double proprioHeight(double desired_height);
