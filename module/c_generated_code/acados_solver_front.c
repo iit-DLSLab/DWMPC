@@ -428,12 +428,39 @@ void front_acados_create_5_set_nlp_in(front_solver_capsule* capsule, const int N
         front_acados_update_time_steps(capsule, N, new_time_steps);
     }
     else
-    {double time_step = 0.01;
-        for (int i = 0; i < N; i++)
-        {
-            ocp_nlp_in_set(nlp_config, nlp_dims, nlp_in, i, "Ts", &time_step);
-            ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "scaling", &time_step);
-        }
+    {double* time_steps = malloc(N*sizeof(double));
+        time_steps[0] = 0.01;
+        time_steps[1] = 0.01;
+        time_steps[2] = 0.009999999999999998;
+        time_steps[3] = 0.010000000000000002;
+        time_steps[4] = 0.03000000000000001;
+        time_steps[5] = 0.03;
+        time_steps[6] = 0.03;
+        time_steps[7] = 0.03;
+        time_steps[8] = 0.03;
+        time_steps[9] = 0.03;
+        time_steps[10] = 0.03;
+        time_steps[11] = 0.030000000000000027;
+        time_steps[12] = 0.030000000000000027;
+        time_steps[13] = 0.030000000000000027;
+        time_steps[14] = 0.030000000000000027;
+        time_steps[15] = 0.030000000000000027;
+        time_steps[16] = 0.030000000000000027;
+        time_steps[17] = 0.030000000000000027;
+        time_steps[18] = 0.030000000000000027;
+        time_steps[19] = 0.030000000000000027;
+        time_steps[20] = 0.030000000000000027;
+        time_steps[21] = 0.030000000000000027;
+        time_steps[22] = 0.030000000000000027;
+        time_steps[23] = 0.030000000000000027;
+        time_steps[24] = 0.030000000000000027;
+        time_steps[25] = 0.030000000000000027;
+        time_steps[26] = 0.030000000000000027;
+        time_steps[27] = 0.030000000000000027;
+        time_steps[28] = 0.030000000000000027;
+        time_steps[29] = 0.030000000000000027;
+        front_acados_update_time_steps(capsule, N, time_steps);
+        free(time_steps);
     }
 
     /**** Dynamics ****/

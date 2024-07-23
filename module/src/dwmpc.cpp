@@ -502,14 +502,15 @@ namespace controllers
         for(int k {0}; k < N_ + 1; k++)
         {   
             //set dt
-            // if(k<2)
-            // {
-            //     dt[0] = 0.01;
-            // }
-            // else
-            // {
-            //     dt[0] = 0.03;
-            // }    
+            if(k<5)
+            {
+                dt[0] = 0.01;
+            }
+            else
+            {
+                dt[0] = 0.03;
+            }    
+
             dt_vec.push_back(dt);
             // update the contact state base on the timer
             contact = timer_.run(dt[0]); // at time k+1
