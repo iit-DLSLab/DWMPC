@@ -94,9 +94,11 @@ namespace controllers
         Eigen::Quaterniond quat_0{};
         quat_0.coeffs() << 0,0,0,1;
         int i{0};
+        Eigen::Vector4d current_contact{};
         for (auto leg : *pRobot_->getLegs())
         {   
             foot_op.col(i) = input_base_state.pose_.toPosition() + input_base_state.pose_.toRotationMatrix().transpose()*feet_position[leg];             
+            current_contact[i] = input_base_state.stance_status_[leg];
             i += 1;
         }
         
@@ -116,6 +118,7 @@ namespace controllers
                   input_base_state.velocity_.getAngular(),//omega 
                   input_blind_state.joints_velocity_.vec_(), //dq
                   this->getPeriod().count()*1e-6,// period
+                  current_contact,//stance_status
                   foot_op,//feet position
                   input_ctrl_comm.base_velocity_HF_.getLinear(),//desired_linear_speed //TODO change from HF to WF
                   input_ctrl_comm.base_velocity_HF_.getAngular(),//desired_angular_speed

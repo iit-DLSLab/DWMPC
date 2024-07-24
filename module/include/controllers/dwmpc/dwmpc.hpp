@@ -35,6 +35,7 @@ namespace controllers
                  const Eigen::VectorXd &omega,
                  const Eigen::VectorXd &dq,
                  const double &loop_dt,
+                 const Eigen::Vector4d &current_contact,
                  const Eigen::MatrixXd &foot_op,
                  const Eigen::VectorXd &desired_linear_speed,
                  const Eigen::VectorXd &desired_angular_speed,

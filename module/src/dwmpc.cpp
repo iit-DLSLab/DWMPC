@@ -183,6 +183,7 @@ namespace controllers
                         const Eigen::VectorXd &omega,
                         const Eigen::VectorXd &dq_op,
                         const double &loop_dt,
+                        const Eigen::Vector4d &current_contact,
                         const Eigen::MatrixXd &foot_op,
                         const Eigen::VectorXd &desired_linear_speed,
                         const Eigen::VectorXd &desired_angular_speed,
@@ -205,6 +206,8 @@ namespace controllers
         initial_condition["quat"] = {quat.x(),quat.y(),quat.z(),quat.w()};
         initial_condition["dp"] = {dp[0],dp[1],dp[2]};
         initial_condition["omega"] = {omega[0],omega[1],omega[2]};
+        initial_condition["contact"] = {current_contact[0],current_contact[1],current_contact[2],current_contact[3]};
+        Eigen::Quaterniond desired_quat = desired_orientation;
 
         //initialize the timer
         std::vector<double> contact0 {timer_.run(loop_dt)};
@@ -563,12 +566,12 @@ namespace controllers
                         std::vector<Eigen::Vector3d> cp{};
                         bezier_curves_t::curve_constraints_t constraints;
                         double scaling_factor{0.7105};
-                    
+                        double delta_x{0.10};
                         // if((t_leg[leg]-timer_.duty_factor)/(1-timer_.duty_factor)<0.5) // maka a bezier curve to the foothold with an apex in the mindle
                         // {     
                             cp.push_back(Eigen::Vector3d(foot_k[3*leg]-p_k[0],foot_k[1+3*leg]-p_k[1],foot_k[2+3*leg]-p_k[2]));
-                            cp.push_back(Eigen::Vector3d(foot_k[3*leg]-p_k[0],foot_k[1+3*leg]-p_k[1],foot_k[2+3*leg]-p_k[2]+desired_.at("step_height")[0]/scaling_factor));
-                            cp.push_back(Eigen::Vector3d((foot_k[3*leg]+foothold[0]-p_k[0])/2,(foot_k[1+3*leg]-p_k[1]+foothold[1])/2,(foot_k[2+3*leg]+foothold[2]-p_k[2])/2+desired_.at("step_height")[0]/scaling_factor));
+                            cp.push_back(Eigen::Vector3d(foot_k[3*leg]-p_k[0]-delta_x/scaling_factor,foot_k[1+3*leg]-p_k[1],foot_k[2+3*leg]-p_k[2]+desired_.at("step_height")[0]/scaling_factor));
+                            cp.push_back(Eigen::Vector3d((foot_k[3*leg]+foothold[0]-p_k[0]-delta_x/scaling_factor)/2,(foot_k[1+3*leg]-p_k[1]+foothold[1])/2,(foot_k[2+3*leg]+foothold[2]-p_k[2])/2+desired_.at("step_height")[0]/scaling_factor));
                             cp.push_back(Eigen::Vector3d(foothold[0],foothold[1],foothold[2] + desired_.at("step_height")[0]/scaling_factor));
                             cp.push_back(Eigen::Vector3d(foothold[0],foothold[1],foothold[2]));
                             constraints.end_vel = Eigen::Vector3d(0,0,0);
@@ -596,7 +599,11 @@ namespace controllers
                             _t = 0.99;
                         }
                         if(fix_swing[leg])
-                        {
+                        {   
+                            if(initial_condition.at("contact")[leg]>0 && std::min((_t-timer_.duty_factor)/(1-timer_.duty_factor),1.0) > 0.5)
+                            {
+                                continue;
+                            }
                             Eigen::Vector3d foot_position{bcs_[leg](std::min((_t-timer_.duty_factor)/(1-timer_.duty_factor),1.0))};
                             foot_k[3*leg] = foot_position[0] + p_k[0];
                             foot_k[3*leg + 1] = foot_position[1] + p_k[1];
@@ -613,7 +620,7 @@ namespace controllers
                     }
                     else
                     {
-                        foot_k[3*leg + 2] = terrain_height_[leg];
+                        // foot_k[3*leg + 2] = terrain_height_[leg];
                         if(fix_swing[leg])
                         {
                             fix_swing[leg] = false;

@@ -43,6 +43,7 @@ int main(int argc, char** argv) {
     std::vector<double> des_contact;
     motion_generators::Vis vis;
     vis.init();
+    Eigen::Vector4d current_contact{1,1,1,1};
     // mpc.startWalking();
     mpc.run(p,
               quat,
@@ -51,6 +52,7 @@ int main(int argc, char** argv) {
               omega,
               dq,
               0.01,
+              current_contact,
              foot_op,
              desired_linear_speed,
              desired_angular_speed,
@@ -134,6 +136,7 @@ int main(int argc, char** argv) {
               omega,
               dq,
               0.01,
+              current_contact,
              foot_op,
              desired_linear_speed,
              desired_angular_speed,
