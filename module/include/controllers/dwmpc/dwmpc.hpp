@@ -83,6 +83,7 @@ namespace controllers
 
         int n_joint_wb_;
         int n_contact_wb_;
+        std::vector<bool> early_contact_;
         double time_{0};
         double frequency_{1};
         double amplitude_{0.1};

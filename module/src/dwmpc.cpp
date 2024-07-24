@@ -600,7 +600,13 @@ namespace controllers
                         }
                         if(fix_swing[leg])
                         {   
-                            if(initial_condition.at("contact")[leg]>0 && std::min((_t-timer_.duty_factor)/(1-timer_.duty_factor),1.0) > 0.5)
+                            
+                            if((initial_condition.at("contact")[leg]>0 && std::min((_t-timer_.duty_factor)/(1-timer_.duty_factor),1.0) > 0.6S))
+                            {   
+                                early_contact_[leg] = true;
+                                continue;
+                            }
+                            if(early_contact_[leg])
                             {
                                 continue;
                             }
@@ -621,6 +627,7 @@ namespace controllers
                     else
                     {
                         // foot_k[3*leg + 2] = terrain_height_[leg];
+                        early_contact_[leg] = false;
                         if(fix_swing[leg])
                         {
                             fix_swing[leg] = false;
