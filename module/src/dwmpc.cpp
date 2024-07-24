@@ -601,7 +601,7 @@ namespace controllers
                         if(fix_swing[leg])
                         {   
                             
-                            if((initial_condition.at("contact")[leg]>0 && std::min((_t-timer_.duty_factor)/(1-timer_.duty_factor),1.0) > 0.6S))
+                            if((initial_condition.at("contact")[leg]>0 && std::min((_t-timer_.duty_factor)/(1-timer_.duty_factor),1.0) > 0.6))
                             {   
                                 early_contact_[leg] = true;
                                 continue;
