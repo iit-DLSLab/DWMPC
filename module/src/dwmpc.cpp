@@ -87,6 +87,7 @@ namespace controllers
         for(int i{0};i < n_contact_wb_;i++)
         {
             terrain_height_.push_back(0); // terrain height for each leg
+            early_contact_.push_back(false);
         }  
 
         q0_ = config["q0"].as<std::vector<double>>();
