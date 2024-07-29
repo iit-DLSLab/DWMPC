@@ -241,15 +241,25 @@ namespace controllers
         // update the desired values
     
         //get the yaw from the quaternion
-        double yaw = std::atan2(2*(quat.w()*quat.z() + quat.x()*quat.y()),1-2*(quat.y()*quat.y() + quat.z()*quat.z()));
-        //turn the desired orientation by the yaw
-        Eigen::Quaterniond yaw_rotation(Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ()));
-        Eigen::Quaterniond rotated_desired_orientation = yaw_rotation * desired_orientation;
+        // double yaw = std::atan2(2*(quat.w()*quat.z() + quat.x()*quat.y()),1-2*(quat.y()*quat.y() + quat.z()*quat.z()));
+        // //turn the desired orientation by the yaw
+        // Eigen::Quaterniond yaw_rotation(Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ()));
+        // Eigen::Quaterniond rotated_desired_orientation = yaw_rotation * desired_orientation;
 
-        desired_["quat"][0] = rotated_desired_orientation.x();
-        desired_["quat"][1] = rotated_desired_orientation.y();
-        desired_["quat"][2] = rotated_desired_orientation.z();
-        desired_["quat"][3] = rotated_desired_orientation.w();
+        // std::cout << "yaw: " << yaw << std::endl;
+        // std::cout << "quat: " << quat.x() << " " << quat.y() << " " << quat.z() << " " << quat.w() << std::endl;
+        // std::cout << "desired orientation: " << desired_orientation.x() << " " << desired_orientation.y() << " " << desired_orientation.z() << " " << desired_orientation.w() << std::endl;
+        // std::cout << "rotated desired orientation: " << rotated_desired_orientation.x() << " " << rotated_desired_orientation.y() << " " << rotated_desired_orientation.z() << " " << rotated_desired_orientation.w() << std::endl;
+
+        Eigen::Vector3d rpy = dls::math::quatToRPY(quat);
+        double yaw = rpy[2];
+        Eigen::Vector3d desired_rpy = dls::math::quatToRPY(desired_orientation);
+        Eigen::Quaterniond rotated_desired_orientation = dls::math::rpyToquat(Eigen::Vector3d(desired_rpy[0],desired_rpy[1],rpy[2]));
+
+        desired_["quat"][0] = 0;
+        desired_["quat"][1] = 0;
+        desired_["quat"][2] = 0;
+        desired_["quat"][3] = 1;
 
         desired_["dp"][0] = cos(yaw)*desired_linear_speed[0] - sin(yaw)*desired_linear_speed[1];
         desired_["dp"][1] = cos(yaw)*desired_linear_speed[1] + sin(yaw)*desired_linear_speed[0];
@@ -555,7 +565,8 @@ namespace controllers
                     if((contact_seq[k+1][leg] == 0 && contact_seq[k][leg]) > 0) // lift off or already on swing
                     {   
                         //get the yaw from the quaternion
-                        double yaw = std::atan2(2*(desired_.at("quat")[3]*desired_.at("quat")[2] + desired_.at("quat")[0]*desired_.at("quat")[1]), 1 - 2*(desired_.at("quat")[1]*desired_.at("quat")[1] + desired_.at("quat")[2]*desired_.at("quat")[2]));
+                        // double yaw = std::atan2(2*(desired_.at("quat")[3]*desired_.at("quat")[2] + desired_.at("quat")[0]*desired_.at("quat")[1]), 1 - 2*(desired_.at("quat")[1]*desired_.at("quat")[1] + desired_.at("quat")[2]*desired_.at("quat")[2]));
+                        double yaw = std::atan2(2*(initial_condition.at("quat")[3]*initial_condition.at("quat")[2] + initial_condition.at("quat")[0]*initial_condition.at("quat")[1]), 1 - 2*(initial_condition.at("quat")[1]*initial_condition.at("quat")[1] + initial_condition.at("quat")[2]*initial_condition.at("quat")[2]));
                         std::vector<double> foothold{cos(yaw)*foot0_[3*leg]-sin(yaw)*foot0_[3*leg+1],cos(yaw)*foot0_[3*leg+1] + sin(yaw)*foot0_[3*leg],terrain_height_[leg]-p_k[2]};
                         
                         // foothold[0] += p_k[0];
@@ -605,6 +616,7 @@ namespace controllers
                             if((initial_condition.at("contact")[leg]>0 && std::min((_t-timer_.duty_factor)/(1-timer_.duty_factor),1.0) > 0.6))
                             {   
                                 early_contact_[leg] = true;
+                                // std::cout << "early contact for leg: " << leg << "at pos: "<< foot_k[3*leg + 2] - p_k[2] << " timer: "<< std::min((_t-timer_.duty_factor)/(1-timer_.duty_factor),1.0) << std::endl;
                                 continue;
                             }
                             if(early_contact_[leg])

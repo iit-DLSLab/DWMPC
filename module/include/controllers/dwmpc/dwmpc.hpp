@@ -10,6 +10,9 @@
 #include "controllers/dwmpc/distributed_solver.hpp"
 #include <numeric>
 
+#include "dls2/math/algebra.hpp"
+#include "dls2/math/rotations.hpp"
+
 typedef double timer_param_t;
 typedef Eigen::VectorXd pointX_t;
 typedef double num_t;
