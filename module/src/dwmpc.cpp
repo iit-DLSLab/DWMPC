@@ -441,7 +441,7 @@ namespace controllers
         std::vector<double> tau_k;
         std::vector<double> grf_k;
         std::vector<double> foot_k;
-
+        std::vector<bool> early_contact = early_contact_;
         //number of leg in contact at this step
         double n_contact{std::accumulate(contact0.begin(),contact0.end(),0.0)};
         std::vector<bool> fix_swing{};
@@ -474,7 +474,6 @@ namespace controllers
             // foot_k.push_back(foot0_[0+3*idx]);
             // foot_k.push_back(foot0_[1+3*idx]);
             // foot_k.push_back(-0.33);
-            
             fix_swing.push_back(contact0[idx] < 1);
         }
         // foot.push_back(foot_k);
@@ -512,7 +511,24 @@ namespace controllers
         std::vector<double> t_leg;
         std::vector<bool> val;
         timer_.get(t_leg,val);
-
+        for(int idx{0};idx<n_contact_wb_;idx++)
+        {
+            if(contact0[idx] > 0 && early_contact_[idx])
+            {
+                early_contact[idx] = false;
+                early_contact_[idx] = false;
+            }
+            if(early_contact_[idx])
+            {
+                continue;
+            }
+            if(contact0[idx] < 1 && initial_condition.at("contact")[idx]>0 && std::min((t_leg[idx]-timer_.duty_factor)/(1-timer_.duty_factor),1.0) > 0.6)
+            {   
+                std::cout << "leg " << idx << " time "<< std::min((t_leg[idx]-timer_.duty_factor)/(1-timer_.duty_factor),1.0) << std::endl;
+                early_contact[idx] = true;
+                early_contact_[idx] = true;
+            }
+        }
         for(int k {0}; k < N_ + 1; k++)
         {   
             //set dt
@@ -612,14 +628,7 @@ namespace controllers
                         }
                         if(fix_swing[leg])
                         {   
-                            
-                            if((initial_condition.at("contact")[leg]>0 && std::min((_t-timer_.duty_factor)/(1-timer_.duty_factor),1.0) > 0.6))
-                            {   
-                                early_contact_[leg] = true;
-                                // std::cout << "early contact for leg: " << leg << "at pos: "<< foot_k[3*leg + 2] - p_k[2] << " timer: "<< std::min((_t-timer_.duty_factor)/(1-timer_.duty_factor),1.0) << std::endl;
-                                continue;
-                            }
-                            if(early_contact_[leg])
+                            if(early_contact[leg])
                             {
                                 continue;
                             }
@@ -640,7 +649,7 @@ namespace controllers
                     else
                     {
                         // foot_k[3*leg + 2] = terrain_height_[leg];
-                        early_contact_[leg] = false;
+                        early_contact[leg] = false;
                         if(fix_swing[leg])
                         {
                             fix_swing[leg] = false;
