@@ -33,10 +33,10 @@ namespace controllers
                                     std::map<std::string,std::vector<std::vector<double>>> &param);
         void run(const Eigen::VectorXd &p,
                  const Eigen::Quaterniond &quat,
-                 const Eigen::VectorXd &q,
+                 const Eigen::VectorXd &q_op,
                  const Eigen::VectorXd &dp,
                  const Eigen::VectorXd &omega,
-                 const Eigen::VectorXd &dq,
+                 const Eigen::VectorXd &dq_op,
                  const double &loop_dt,
                  const Eigen::Vector4d &current_contact,
                  const Eigen::MatrixXd &foot_op,
@@ -51,21 +51,35 @@ namespace controllers
                  std::vector<Eigen::Vector4d> &arrow_quat,
                  std::vector<double> &arrow_length,
                  std::vector<double> &des_contact,
-                 std::vector<double> &des_tau,
+                 std::vector<double> &des_tau ,
                  std::vector<double> &des_q,
-                 std::vector<double> &des_dq);
+                 std::vector<double> &des_dq );
+         void run(const Eigen::Ref<const Eigen::VectorXd> &p,
+                 const Eigen::Ref<Eigen::Vector4d> &quat,
+                 const Eigen::Ref<const Eigen::VectorXd> &q_op,
+                 const Eigen::Ref<const Eigen::VectorXd> &dp,
+                 const Eigen::Ref<const Eigen::VectorXd> &omega,
+                 const Eigen::Ref<const Eigen::VectorXd> &dq_op,
+                 const double &loop_dt,
+                 const Eigen::Ref<const Eigen::Vector4d> &current_contact,
+                 const Eigen::Ref<const Eigen::MatrixXd> &foot_op,
+                 const Eigen::Ref<const Eigen::VectorXd> &desired_linear_speed,
+                 const Eigen::Ref<const Eigen::VectorXd> &desired_angular_speed,
+                 const Eigen::Ref<Eigen::Vector4d> &desired_orientation,
+                 std::vector<double> &des_contact,
+                 std::vector<double> &des_tau ,
+                 std::vector<double> &des_q,
+                 std::vector<double> &des_dq
+
+         );
         void init();
         void setWeight(const std::map<std::string,std::vector<double>> &weight_vec);
-        void setGaitParam(const double duty_factor,const double step_freq,const std::vector<double> &delta);
-        void setGaitParam(const double duty_factor,const double step_freq, const int gait_type);
+        void setGaitParam(const double duty_factor, const double step_freq, const std::vector<double> &delta);
+        void setGaitParam(const double duty_factor, const double step_freq, const int gait_type);
         void updateTimer(const std::vector<double> &t, const std::vector<bool> &init);
         void reset();
         void startWalking();
         void stopWalking();
-        void reorder_contact(Eigen::MatrixXd &contact);
-        void reorder_contact(std::vector<double> &contact);
-        void reorder_joints(Eigen::VectorXd &joint,const bool in);
-        void reorder_joints(std::vector<double> &joint,const bool in);
         void getFullPrediction(std::map<std::string,pdata> &data);
         void prepare();
         void sineWave(std::map<std::string,std::vector<std::vector<double>>> &ref, std::map<std::string,std::vector<std::vector<double>>> &param);
@@ -81,6 +95,11 @@ namespace controllers
         double proprioHeight(double desired_height);
         void upate_terrain_height(const std::vector<double> &contact0,
                                   const Eigen::MatrixXd &foot_op);
+        void reorder_contact(Eigen::MatrixXd &contact);
+        void reorder_contact(std::vector<double> &contact);
+        void reorder_contact(Eigen::Vector4d &contact);
+        void reorder_joints(Eigen::VectorXd &joint,const bool in);
+        void reorder_joints(std::vector<double> &joint,const bool in);
         dsolver ocp_;
         int N_;
 

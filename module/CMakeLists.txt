@@ -3,7 +3,8 @@ set(CMAKE_CXX_FLAGS "-O3")
 # add_compile_options("-std=c++2a")
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
-
+find_package(pybind11 CONFIG REQUIRED)
+find_package(Python3 REQUIRED COMPONENTS Development)
 add_subdirectory(third_party/acados)
 
 # Create the library for the module
@@ -50,6 +51,14 @@ target_link_directories( test
 	PUBLIC
 	/usr/lib/dls2/motion_generators/vis
 )
+
+pybind11_add_module(pydwmpc src/py_dwmpc.cpp)
+target_link_libraries(pydwmpc
+	PUBLIC
+	${MODULE_LIBRARY_NAME}
+	vis_module
+)
+
 # ================================== Install =================================
 install(
 	DIRECTORY   include/
@@ -79,3 +88,4 @@ install(
 	TARGETS test 
 	RUNTIME DESTINATION /usr/lib/dls2/controllers/${PLUGIN_NAME}
 	COMPONENT ${MODULE_LIBRARY_NAME} )
+install(TARGETS pydwmpc DESTINATION /usr/lib/dls2/controllers/${PLUGIN_NAME})

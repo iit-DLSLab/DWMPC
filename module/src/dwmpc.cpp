@@ -20,6 +20,15 @@ namespace controllers
         c.col(3) = contact.col(2);
         contact = c;
     }
+    void Dwmpc::reorder_contact(Eigen::Vector4d &contact)
+    {
+        Eigen::Vector4d c;
+        c[0] = contact[1];
+        c[1] = contact[0];
+        c[2] = contact[3];
+        c[3] = contact[2];
+        contact = c;
+    }
     void Dwmpc::reorder_contact(std::vector<double> &contact)
     {
         std::vector<double> c;
@@ -176,30 +185,60 @@ namespace controllers
         timer_.setParam(config["duty_factor"].as<double>(),config["step_freq"].as<double>());
         timer_.set({0,0,0,0},{true,true,true,true}); 
 
+        std::cout << "Dwmpc initialized" << std::endl;
+
+    }
+    void Dwmpc::run(const Eigen::Ref<const Eigen::VectorXd> &p,
+                     const Eigen::Ref<Eigen::Vector4d> &quat,
+                     const Eigen::Ref<const Eigen::VectorXd> &q_op,
+                     const Eigen::Ref<const Eigen::VectorXd> &dp,
+                     const Eigen::Ref<const Eigen::VectorXd> &omega,
+                     const Eigen::Ref<const Eigen::VectorXd> &dq_op,
+                     const double &loop_dt,
+                     const Eigen::Ref<const Eigen::Vector4d> &current_contact,
+                     const Eigen::Ref<const Eigen::MatrixXd> &foot_op,
+                     const Eigen::Ref<const Eigen::VectorXd> &desired_linear_speed,
+                     const Eigen::Ref<const Eigen::VectorXd> &desired_angular_speed,
+                     const Eigen::Ref<Eigen::Vector4d> &desired_orientation,
+                     std::vector<double> &des_contact,
+                     std::vector<double> &des_tau ,
+                     std::vector<double> &des_q,
+                     std::vector<double> &des_dq)
+    {
+        Eigen::Quaterniond quat_(quat[3],quat[0],quat[1],quat[2]);
+        Eigen::Quaterniond desired_orientation_(desired_orientation[3],desired_orientation[0],desired_orientation[1],desired_orientation[2]);
+        std::vector<Eigen::Vector3d> temp_sphere_pos;
+        std::vector<Eigen::Vector4d> temp_sphere_color;
+        std::vector<Eigen::Vector3d> temp_arrow_pos;
+        std::vector<Eigen::Vector4d> temp_arrow_color;
+        std::vector<Eigen::Vector4d> temp_arrow_quat;
+        std::vector<double> arrow_length;
+        std::vector<double> sphere_radius;
+        run(p,quat_,q_op,dp,omega,dq_op,loop_dt,current_contact,foot_op.transpose(),desired_linear_speed,desired_angular_speed,desired_orientation_,temp_sphere_pos,temp_sphere_color,sphere_radius,temp_arrow_pos,temp_arrow_color,temp_arrow_quat,arrow_length,des_contact,des_tau,des_q,des_dq);
     }
     void Dwmpc::run(const Eigen::VectorXd &p,
-                        const Eigen::Quaterniond &quat,
-                        const Eigen::VectorXd &q_op,
-                        const Eigen::VectorXd &dp,
-                        const Eigen::VectorXd &omega,
-                        const Eigen::VectorXd &dq_op,
-                        const double &loop_dt,
-                        const Eigen::Vector4d &current_contact,
-                        const Eigen::MatrixXd &foot_op,
-                        const Eigen::VectorXd &desired_linear_speed,
-                        const Eigen::VectorXd &desired_angular_speed,
-                        const Eigen::Quaterniond &desired_orientation,
-                        std::vector<Eigen::Vector3d> &sphere_pos,
-                        std::vector<Eigen::Vector4d> &sphere_color,
-                        std::vector<double> &sphere_radius,
-                        std::vector<Eigen::Vector3d> &arrow_pos,
-                        std::vector<Eigen::Vector4d> &arrow_color,
-                        std::vector<Eigen::Vector4d> &arrow_quat,
-                        std::vector<double> &arrow_length,
-                        std::vector<double> &des_contact,
-                        std::vector<double> &des_tau,
-                        std::vector<double> &des_q,
-                        std::vector<double> &des_dq)
+                    const Eigen::Quaterniond &quat,
+                    const Eigen::VectorXd &q_op,
+                    const Eigen::VectorXd &dp,
+                    const Eigen::VectorXd &omega,
+                    const Eigen::VectorXd &dq_op,
+                    const double &loop_dt,
+                    const Eigen::Vector4d &current_contact,
+                    const Eigen::MatrixXd &foot_op,
+                    const Eigen::VectorXd &desired_linear_speed,
+                    const Eigen::VectorXd &desired_angular_speed,
+                    const Eigen::Quaterniond &desired_orientation,
+                    std::vector<Eigen::Vector3d> &sphere_pos,
+                    std::vector<Eigen::Vector4d> &sphere_color,
+                    std::vector<double> &sphere_radius,
+                    std::vector<Eigen::Vector3d> &arrow_pos,
+                    std::vector<Eigen::Vector4d> &arrow_color,
+                    std::vector<Eigen::Vector4d> &arrow_quat,
+                    std::vector<double> &arrow_length,
+                    std::vector<double> &des_contact,
+                    std::vector<double> &des_tau ,
+                    std::vector<double> &des_q,
+                    std::vector<double> &des_dq)
     {   
         // build the initial condition map
         std::map<std::string,std::vector<double>> initial_condition;
@@ -207,13 +246,13 @@ namespace controllers
         initial_condition["quat"] = {quat.x(),quat.y(),quat.z(),quat.w()};
         initial_condition["dp"] = {dp[0],dp[1],dp[2]};
         initial_condition["omega"] = {omega[0],omega[1],omega[2]};
-        initial_condition["contact"] = {current_contact[0],current_contact[1],current_contact[2],current_contact[3]};
+        initial_condition["contact"] = {current_contact[1],current_contact[0],current_contact[3],current_contact[2]};
         Eigen::Quaterniond desired_quat = desired_orientation;
-
-        //initialize the timer
+        //initialize the timer        
         std::vector<double> contact0 {timer_.run(loop_dt)};
         des_contact = contact0;
-        // reorder_contact(des_contact);
+        reorder_contact(des_contact);
+
         time_ += loop_dt;
         //save t and init values for next iteration
         std::vector <double> t{};
@@ -225,8 +264,8 @@ namespace controllers
         Eigen::VectorXd q = q_op;
         Eigen::VectorXd dq = dq_op;
         
-        // reorder_joints(q,true);
-        // reorder_joints(dq,true);
+        reorder_joints(q,true);
+        reorder_joints(dq,true);
 
         for (auto i{0};i < n_joint_wb_;i++)
         {
@@ -235,8 +274,7 @@ namespace controllers
         }
 
         Eigen::MatrixXd foot = foot_op;
-        // reorder_contact(foot);
-
+        reorder_contact(foot);
         upate_terrain_height(contact0,foot);
         // update the desired values
     
@@ -381,9 +419,9 @@ namespace controllers
         // update desired torque, joint angle and joint velocity
         ocp_.getControl(des_q,des_dq,des_tau);   
         // reorder the joint values
-        // reorder_joints(des_q,false);
-        // reorder_joints(des_dq,false);
-        // reorder_joints(des_tau,false);  
+        reorder_joints(des_q,false);
+        reorder_joints(des_dq,false);
+        reorder_joints(des_tau,false);
 
     }
     void Dwmpc::upate_terrain_height(const std::vector<double> &contact0, const Eigen::MatrixXd &foot_op)

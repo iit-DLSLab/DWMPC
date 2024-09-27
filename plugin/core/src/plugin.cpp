@@ -110,6 +110,7 @@ namespace controllers
         output_vis_message.arrow_quat_.clear();
         output_vis_message.arrow_length_.clear();
 
+        // auto start = std::chrono::high_resolution_clock::now();
         // Run module
         dwmpc.run(input_base_state.pose_.toPosition(), //p
                   input_base_state.pose_.toQuaternion(),//quat
@@ -135,6 +136,8 @@ namespace controllers
                   des_q,//des_q
                   des_dq//des_dq
                   );
+        // auto end = std::chrono::high_resolution_clock::now();
+        // std::cout << "Time to run dwmpc: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
         //test publish vis message
        auto robot_jacobian_tmp = this->pRobot_->makeLegDataMap<Eigen::Matrix3d>(Eigen::Matrix3d::Zero());
        auto robot_jacobian = this->pRobot_->makeFeetJacobian();
