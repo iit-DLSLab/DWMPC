@@ -1,4 +1,10 @@
 # DWMPC: Distributed Whole-Body Model Predictive Control
+
+
+| Simulation | Real Robot |
+| -------- | ------- |
+|  <img src="https://github.com/user-attachments/assets/a56335b6-bb96-4cc3-919e-2314afa77141" width=500>  | <img src="https://github.com/user-attachments/assets/438273d1-2ef8-47f5-89f8-bd6dbaba28c7" width=500> |
+
 <div align="center">
   2024 IEEE/RSJ International Conference on Intelligent Robots and Systems
 </div>
