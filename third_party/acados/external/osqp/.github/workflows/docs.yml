@@ -1,0 +1,63 @@
+name: Docs 
+
+on:
+  push:
+    branches: [ master, develop-1.0 ]
+    tags:
+      - '*'
+
+jobs:
+
+  build_docs:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: [3.9]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: master
+          lfs: false
+
+      - name: Install OS dependencies
+        run: |
+          sudo apt-get install doxygen
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install Python dependencies
+        run: |
+          pip install sphinx sphinx-rtd-theme breathe
+
+      - name: Setup Envvars
+        run: |
+            if [[ $GITHUB_REF = "refs/tags/"* ]] ; then echo "OSQP_VERSION=${GITHUB_REF/refs\/tags\//}" ; else echo "OSQP_VERSION=0.0.0" ; fi >> $GITHUB_ENV
+            if [[ $GITHUB_REF = "refs/tags/"* ]] ; then echo "OSQP_NAME=osqp-${GITHUB_REF/refs\/tags\//}-${{ runner.os }}" ; else echo "OSQP_NAME=osqp-0.0.0-${{ runner.os }}" ; fi >> $GITHUB_ENV
+
+      - name: Build docs
+        run: |
+          cd docs && make HTMLCOPYDIR=../site/docs html && touch ../site/docs/.nojekyll
+
+      # Build documentation on the develop-1.0 branch in a subfolder
+      # ------------------------------------------------------------
+      - uses: actions/checkout@v2
+        with:
+          ref: develop-1.0
+          path: develop-1.0
+          clean: false
+
+      - name: Build docs on develop-1.0
+        run: |
+          rm -rf develop-1.0/.git
+          cd develop-1.0/docs && make HTMLCOPYDIR=../../site/docs/develop-1.0 html
+      # ------------------------------------------------------------
+
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@4.1.1
+        with:
+          branch: gh-pages
+          folder: site

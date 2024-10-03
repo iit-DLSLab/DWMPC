@@ -1,0 +1,57 @@
+n_problem : 2
+n_joint_wb : 12
+n_contact_wb : 4
+n_legs : 4
+#q0 : [-0.2,0.8,-1.8,-0.2,0.8,-1.8,-0.2,0.8,-1.8,-0.2,0.8,-1.8]
+# foot0 : [0.27092872, 0.174, 0.02074775,0.27092872,-0.174, 0.0207477,-0.20887128, 0.174, 0.02074775,-0.20887128, -0.174  ,  0.02074775] 
+# foot0 : [0.27092872,-0.134, 0.0207477,0.27092872, 0.134, 0.02074775,-0.20887128, -0.134,  0.02074775,-0.20887128, 0.134, 0.02074775] 
+q0 : [-0.2,0.8,-1.8,0.2,0.8,-1.8,-0.2,0.8,-1.8,0.2,0.8,-1.8]
+foot0 : [0.27092872, -0.174, 0.02074775,0.27092872,0.174, 0.0207477,-0.20887128, -0.174, 0.02074775,-0.20887128, 0.174  ,  0.02074775] 
+
+max_iteration : 20
+receding_horizon : true
+subsystems_name : [front,back,wb]
+subsystems_map_joint: 
+  front: [0,1,2,3,4,5]
+  back: [6,7,8,9,10,11]
+  wb: [0,1,2,3,4,5,6,7,8,9,10,11]
+subsystems_map_contact: 
+  front: [0,1]
+  back: [2,3]
+  wb: [0,1,2,3]
+robot_height: [0.33]
+step_height: [0.18]
+quat: [0,0,0,1] 
+dp: [0,0,0]
+omega: [0,0,0]
+
+weight_p: [10,10,1e4]
+weight_quat: [0,0,0]
+weight_q:  [1e2]
+weight_dp: [1e3,1e3,1e2]
+weight_omega: [1e2,1e2,2e2]
+weight_dq: [1e1]
+weight_tau: [1e-2]
+weight_grf: [2e-2]
+weight_foot_swing: [1e5,1e5,1e5]
+weight_foot_stance: [1e4,1e4,1e5]
+weight_consensus: [2]
+
+# delta: [0.25, 0.75, 0.99, 0.5]            # crawl
+delta: [000.5,0000.0,0000.0,0000.5]       # trot    
+duty_factor : 0.7 #crawl                  # 0.65 #trot
+step_freq : 1 #crawl                    # 1.3 #trot
+
+N_step: 30
+
+constraint:
+  lh: [lh_fc,lh_zc,lh_sc,lh_kc,lh_tc]
+  lh0: [lh_fc,lh_tc]
+  lh_fc: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+  lh_zc: [-0.005,-0.005]
+  lh_sc: [-0.005,-0.005,-0.005,-0.005,-0.005,-0.005]
+  lh_kc: [-1.22173,-1.57,-2.77507,-1.22173,-1.57,-2.77507]
+  lh_tc: [-44, -44, -44,-44, -44, -44]
+# TO DO add the definition of the upper bound
+n_ineq_0: 20
+n_ineq: 20
