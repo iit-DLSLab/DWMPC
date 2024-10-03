@@ -1,0 +1,76 @@
+jsonlab >> JSONLab
+JSON
+ loadjson
+ savejson
+Binary JData
+ loadbj
+ savebj
+UBJSON
+ loadubjson
+ saveubjson
+MessagePack
+ loadmsgpack
+ savemsgpack
+JData Workspace
+ jload
+ jsave
+JData Specification
+ jdatadecode
+ jdataencode
+Interface
+ loadjd
+ savejd
+JSON Mmap
+ jsonget
+ jsonset
+ filterjsonmmap
+ jsonpath
+External Links
+ jdlink
+ jsoncache
+ json2couch
+Compression and Decompression
+ base64decode
+ base64encode
+ blosc2decode
+ blosc2encode
+ gzipdecode
+ gzipencode
+ lz4decode
+ lz4encode
+ lz4hcdecode
+ lz4hcencode
+ lzipdecode
+ lzipencode
+ lzmadecode
+ lzmaencode
+ zlibdecode
+ zlibencode
+ zstddecode
+ zstdencode
+ octavezmat
+HDF5 file parser
+ loadh5
+JNIfTI file parser
+ loadjnifti
+ loadnifti
+ nii2jnii
+ niicodemap
+ niiformat
+ niiheader2jnii
+Helper Functions
+ decodevarname
+ encodevarname
+ fast_match_bracket
+ isoctavemesh
+ jsonopt
+ jdatahash
+ match_bracket
+ mergestruct
+ nestbracket2dim
+ varargin2struct
+ getvarfrom
+ regrouph5
+ transposemat
+ memmapstream
+ loadbidstsv

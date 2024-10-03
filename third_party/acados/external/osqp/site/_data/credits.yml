@@ -1,0 +1,47 @@
+- name: Bartolomeo Stellato
+  role: Main developer
+  affiliation: Princeton University
+  website: https://stellato.io
+
+- name: Goran Banjac
+  role: Main developer
+  website: https://github.com/gbanjac
+
+- name: Paul Goulart
+  role: Methods and Maths
+  affiliation: University of Oxford
+  website: http://users.ox.ac.uk/~engs1373/
+
+- name: Stephen Boyd
+  role: Methods and Maths
+  affiliation: Stanford University
+  website: https://web.stanford.edu/~boyd/
+
+- name: Alberto Bemporad
+  role: Methods and Maths
+  affiliation: IMT Lucca
+  website: http://cse.lab.imtlucca.it/~bemporad/
+
+- name: Nicholas Moehle
+  role: Methods, Maths and Code Generation
+  affiliation: Stanford University
+  website: https://www.nicholasmoehle.com/
+
+- name: Michel Schubiger
+  role: GPU implementation
+  affiliation: Schindler R&D
+
+- name: John Lygeros
+  role: Methods and Maths
+  affiliation: ETH Zurich
+  website: https://control.ee.ethz.ch/people/profile.john-lygeros.html
+
+- name: Ian McInerney
+  role: Software Engineering and Code Generation
+  affiliation: Imperial College London
+  website: https://ism.engineer
+
+- name: Vineet Bansal
+  role: Software Engineering
+  affiliation: CSML, Princeton University
+  website: https://csml.princeton.edu/people/vineet-bansal
