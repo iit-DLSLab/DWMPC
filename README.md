@@ -57,7 +57,7 @@ make install -j4
 ```
 After building, add `acados` to your `LD_LIBRARY_PATH`:
 ```bash
-export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=<path_to_acados\lib>:$LD_LIBRARY_PATH
 ```
 ### 4. Build DWMPC
 From the main `DWMPC` repository, create a build directory and compile the project:
