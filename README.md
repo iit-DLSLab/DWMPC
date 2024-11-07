@@ -1,4 +1,10 @@
 # DWMPC: Distributed Whole-Body Model Predictive Control
+
+
+| Simulation | Real Robot |
+| -------- | ------- |
+|  <img src="https://github.com/user-attachments/assets/c30d86dd-8e0e-4435-b616-f7bda4525031" width=500>  | <img src="https://github.com/user-attachments/assets/e0dce684-cff3-4c65-8560-a1e0806ad6a3" width=500> |
+
 <div align="center">
   2024 IEEE/RSJ International Conference on Intelligent Robots and Systems
 </div>
@@ -11,7 +17,7 @@
   
 </div>
 
-DWMPC is a library for distributed model predictive control (MPC) of quadruped robots. This repository includes the core MPC controller in cpp and example usage with the `gym-quadruped` environment in python.
+DWMPC is a library for distributed model predictive control (MPC) of quadruped robots. This repository includes the core MPC controller in cpp and example usage with the `gym-quadruped` environment in Python. The provided [acados solver](c_generated_code) has been generated for aliengo. If you want to try with different robots check this [Python](script/generate_ocp.py) file to generate a new C solver.
 
 
 ## Dependencies
@@ -51,7 +57,7 @@ make install -j4
 ```
 After building, add `acados` to your `LD_LIBRARY_PATH`:
 ```bash
-export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=<path_to_acados\lib>:$LD_LIBRARY_PATH
 ```
 ### 4. Build DWMPC
 From the main `DWMPC` repository, create a build directory and compile the project:
