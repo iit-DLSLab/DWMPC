@@ -9,11 +9,13 @@ class ocp_formulation:
 
     def __init__(self,args):
 
+        #Sub-Problem parameters
         self.joints_name_list_ = args['joints_name_list'] #list of actuated joints
         self.contact_frame_name_list_ = args['contact_frame_name_list'] #list of contact frames
 
         root_link = "trunk"
 
+        #Whole-Body Problem parameters
         self.model_path_wb_ = args['model_path_wb'] #path to the urdf file
         self.joints_name_list_wb_ = args['joints_name_list_wb'] #list of actuated joints
         self.contact_frame_name_list_wb_ = args['contact_frame_name_list_wb'] #list of contact frames
@@ -31,9 +33,17 @@ class ocp_formulation:
         self.lh = []
         self.uh = []
 
-    def getOptimalProblem(self, model_name = "robot"):
+        # model = pinocchio.buildModelFromUrdf(self.model_path_wb_ )
+
+        # self.cmodel = cpin.Model(model)
+        # self.cdata =  self.cmodel.createData()
+
+    def getOptimalProblem(self, dynamic_model="DISCRETE", model_name = "robot", make_model=True):
 
         print("Creating optimal control problem for the robot model: ", model_name)
+        # if(dynamic_model == "CONTINUOUS"):
+        #     print("changing to discrete dynamics model with semi-implicit euler, \n TO DO continuos")
+            # dynamic_model = "DISCRETE"
 
         ocp = AcadosOcp()
         ocp.model.name = model_name
@@ -44,7 +54,7 @@ class ocp_formulation:
         n_joints_wb = len(self.joints_name_list_wb_)
         n_contact_wb = len(self.contact_frame_name_list_wb_)
 
-        s_idx =  self.s_idx_ # mapping joints position of the substistem in the right order
+        s_idx =  self.s_idx_
 
         # Define the optimization variables depending on the dynamic model
 
@@ -61,8 +71,8 @@ class ocp_formulation:
         tau = cs.SX.sym("joint_torque",n_joints,1) #joint torque
 
         grf = cs.SX.sym("ground_reaction_forces",3*n_contact,1) #Ground Reaction Forces
-        grf_aux = cs.SX.sym("ground_reaction_forces_aux",3*n_contact,1) #Ground Reaction Forces slack variable
-        grf_old = cs.SX.sym("grf_old",12,1)#Ground Reaction Forces from the previous step
+        grf_aux = cs.SX.sym("ground_reaction_forces_aux",3*n_contact,1) #Ground Reaction Forces (same dimension of the )
+        grf_old = cs.SX.sym("grf_old",12,1)
 
         foot_ref = cs.SX.sym("foot_position_reference",3*(n_contact),1) #position of the leg
         contact_state = cs.SX.sym("contact_state",n_contact_wb,1) #contact state 1 in contact 0 if not
@@ -80,6 +90,8 @@ class ocp_formulation:
 
         control = cs.vertcat(tau,grf,grf_aux)
         nu =  n_joints + 3*n_contact + 3*n_contact
+        # control = cs.vertcat(tau,grf)
+        # nu =  n_joints + 3*n_contact
         self.nu_ = nu
 
         parameter = cs.vertcat(contact_state,foot_ref,q_aux,dq_aux,quat_ref,dt,grf_old)
@@ -109,16 +121,19 @@ class ocp_formulation:
 
         q_wb = cs.vertcat(q_aux[:3*s_idx],q,q_aux[n_joints+3*s_idx:]) #add the auxiliary joints to the state joints
         dq_wb = cs.vertcat(dq_aux[:3*s_idx],dq,dq_aux[n_joints+3*s_idx:]) #add the auxiliary joints speed to the state joints
-        #add the auxiliary grf to the grf
         if s_idx == 0:
             grf_wb = cs.vertcat(grf,grf_old[6:]+grf_aux)
         else:
             grf_wb = cs.vertcat(grf_old[:6]+grf_aux,grf)
-
         w_H_b =SE3(p,quat).transform()
+
+        # alpha0 = np.array([0.3,0.2,0.28,0.3,0.2,0.28])
+        # alpha1 = np.array([0.45,0.5,0.9,0.45,0.5,0.9])
+        # alpha2 = np.array([0.03,0.025,0.02,0.03,0.025,0.02])
+        # for idx in range(0,n_joints) :
+        #     tau_friction[idx] = cs.tanh(dq_wb[3*s_idx+idx]/0.03)*(alpha0[idx]) + alpha2[idx]*dq_wb[3*s_idx+idx]
         torque = cs.vertcat(np.zeros((6,1)),tau)
         ext_torque = cs.SX.zeros(6+n_joints)
-
         for idx in range(0,n_contact_wb) :
             if idx == s_idx or idx == (n_contact-1)+s_idx:
                 J = self.kinDyn_wb_.jacobian_fun(self.contact_frame_name_list_wb_[idx])
@@ -152,6 +167,7 @@ class ocp_formulation:
         _p_next[:3] = p + _v_next[:3]*dt
         _p_next[3:7] = (SO3Tangent(_v_next[3:6] * dt) + SO3(quat)).as_quat().coeffs()
         _p_next[7:] = q + _v_next[6:]*dt
+        # _tau_next = tau + dtau*dt
         expr_phi = cs.vertcat(_p_next,_v_next)
 
         ocp.model.disc_dyn_expr = expr_phi
@@ -207,6 +223,27 @@ class ocp_formulation:
 
         ng_fc = 5*n_contact_wb
 
+        #  ## == FRICTION CONE ===
+        # mu = 0.5
+        # Fmin = 0
+        # Fmax = 500
+        # expr_fc = cs.SX.ones(5*n_contact,1)
+        # uh_fc = np.zeros(5*n_contact)
+        # lh_fc = np.zeros(5*n_contact)
+        # # idx = s_idx
+        # kk = 0
+        # for idx in range(n_contact):
+        #         expr_fc[5*kk : 5 + 5*kk] = cs.vertcat(mu*grf[3*idx+2]+grf[3*idx],
+        #                                              mu*grf[3*idx+2]-grf[3*idx],
+        #                                              mu*grf[3*idx+2]+grf[3*idx+1],
+        #                                              mu*grf[3*idx+2]-grf[3*idx+1],
+        #                                              grf[3*idx+2])
+        #         kk = kk + 1
+        # uh_fc = np.ones(5*n_contact)*Fmax
+        # lh_fc = np.array([0,0,0,0,Fmin]*n_contact)
+
+        # ng_fc = 5*n_contact
+
         ## === torque limits === ##
         expr_tc = tau
         lh_tc = -np.array([44,44,44]*n_contact)
@@ -220,14 +257,36 @@ class ocp_formulation:
         ng_kc = n_joints
 
 
-        ## === total constraint === #
+        ## === total constraint === ##
+
+        # ocp.model.con_h_expr = cs.vertcat(expr_fc,expr_zc,expr_sc,expr_kc,expr_tc)
+        # ocp.constraints.uh = np.concatenate((uh_fc,uh_zc,uh_sc,uh_kc,uh_tc))
+        # ocp.constraints.lh = np.concatenate((lh_fc,lh_zc,lh_sc,lh_kc,lh_tc))
         
+        self.lh = ocp.constraints.lh
+        print(self.lh.shape)
+        self.uh = ocp.constraints.uh
+        # ng_c = ng_sc + ng_fc + ng_zc
+
+        # ocp.model.con_h_expr = cs.vertcat(expr_fc,expr_sc)
+        # ocp.constraints.uh = np.concatenate((uh_fc,uh_sc))
+        # ocp.constraints.lh = np.concatenate((lh_fc,lh_sc))
+        # self.lh = np.concatenate((lh_fc,lh_sc))
+        # self.uh = np.concatenate((uh_fc,uh_sc))
+        # ng_c = ng_sc + ng_fc
         ocp.model.con_h_expr = expr_sc
         ocp.constraints.uh = uh_sc
         ocp.constraints.lh = lh_sc
         self.lh = ocp.constraints.uh 
         self.uh =  ocp.constraints.lh
         ng_c = ng_sc  
+        # ocp.model.con_h_expr_0 = cs.vertcat(expr_fc,expr_tc)
+        # ocp.constraints.lh_0 = np.concatenate((lh_fc,lh_tc))
+        # ocp.constraints.uh_0 = np.concatenate((uh_fc,uh_tc))
+
+        # ocp.model.con_h_expr_0 = expr_fc
+        # ocp.constraints.lh_0 = lh_fc
+        # ocp.constraints.uh_0 = uh_fc
 
         # ## === add slack for non liear constraints === ##
         ocp.constraints.lsh = np.zeros(ng_c)             # Lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints
@@ -238,9 +297,19 @@ class ocp_formulation:
         ocp.cost.Zl = 1 * np.ones((ng_c,))    # diagonal of Hessian wrt lower slack at intermediate shooting nodes (1 to N-1)
         ocp.cost.zu = 1000 * np.ones((ng_c,))
         ocp.cost.Zu = 1 * np.ones((ng_c,))
+
+        # ocp.constraints.lsh_0 = np.zeros(ng_fc)             # Lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints
+        # ocp.constraints.ush_0 = np.zeros(ng_fc)             # Lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints
+        # ocp.constraints.idxsh_0 = np.array(range(ng_fc))    # Jsh
+
+        # ocp.cost.zl_0 = 1000 * np.ones((ng_fc,)) # gradient wrt lower slack at intermediate shooting nodes (1 to N-1)
+        # ocp.cost.Zl_0 = 1 * np.ones((ng_fc,))    # diagonal of Hessian wrt lower slack at intermediate shooting nodes (1 to N-1)
+        # ocp.cost.zu_0 = 1000 * np.ones((ng_fc,))
+        # ocp.cost.Zu_0 = 1 * np.ones((ng_fc,))
         #                                     ##========OBJECTIVE FUNCTION========##
 
         cost_type = 'NONLINEAR_LS'
+        # cost_type = 'LINEAR_LS'
 
         ocp.cost.cost_type = cost_type
         ocp.cost.cost_type_e = cost_type
@@ -255,6 +324,11 @@ class ocp_formulation:
 
         angle_error = (SO3(quat) - SO3(quat_ref)).vec
 
+        # 1-3 2-3
+        # if s_idx == 0:
+        #     consensus = cs.vertcat(dp,omega)
+        # else:
+        #     consensus = cs.vertcat(-dp,-omega)
         consensus = cs.vertcat(dp,omega)
 
         ocp.model.cost_y_expr = cs.vertcat(p,angle_error,q,dp,omega,dq,foot,tau,grf_wb,consensus)
@@ -282,6 +356,7 @@ class ocp_formulation:
         ### CONSENSUS COST
         weight_consensus_wrench = np.array(rho*6)
 
+
         Q = np.concatenate((weight_postion,weight_angle,weight_joint,weight_linear_speed,weight_angular_speed,weight_joint_vel,weight_foot_pos))
         R = np.concatenate((weight_torque,weight_grond_reaction_forces,weight_grond_reaction_forces,weight_consensus_wrench))
         W = np.diag(np.concatenate((Q,R)))
@@ -291,7 +366,6 @@ class ocp_formulation:
 
         ocp.cost.yref = np.zeros(cs.SX.size(ocp.model.cost_y_expr,1))
         ocp.cost.yref_e = np.zeros(cs.SX.size(ocp.model.cost_y_expr_e,1))
-
         for idx in range(5*n_contact_wb):
             ocp.formulate_constraint_as_L2_penalty(expr_fc[idx],1e5,uh_fc[idx],lh_fc[idx])
                                                 ## == INITIAL CONDITION == ##
@@ -300,43 +374,68 @@ class ocp_formulation:
         tol = 1e-3
         shooting_nodes = np.zeros(self.N_+1)
         for(idx) in range(self.N_+1):
-            if idx < 5:
+            if idx < 3:
                 shooting_nodes[idx] = idx*0.01
             else:
                 shooting_nodes[idx] = shooting_nodes[idx-1] + 0.03
                 
         # shooting_nodes = np.linspace(0,self.N_*self.dt_,self.N_+1)
+        print(shooting_nodes)
         tol = 1e-3
 
         ocp.dims.N = self.N_
         ocp.solver_options.shooting_nodes = shooting_nodes
+        # ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES , PARTIAL_CONDENSING_HPIPM
         ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"
         ocp.solver_options.hessian_approx = 'GAUSS_NEWTON' # GAUSS_NEWTON, EXACT
         ocp.solver_options.nlp_solver_type = 'SQP_RTI' # SQP_RTI or SQP
         ocp.solver_options.qp_solver_warm_start = 2
+        # ocp.solver_options.regularize_method = 'CONVEXIFY'
         ocp.solver_options.hpipm_mode = 'SPEED_ABS'
         ocp.solver_options.nlp_solver_max_iter = 1
+        # ocp.solver_options.globalization = "MERIT_BACKTRACKING"
         ocp.solver_options.ext_fun_compile_flags = '-O3'
         ocp.solver_options.integrator_type = "DISCRETE"
+        # ocp.solver_options.tol = tol
         ocp.solver_options.print_level = 0
 
         ocp.solver_options.tf = shooting_nodes[self.N_]
         # ocp.translate_to_feasibility_problem(keep_x0=True, keep_cost=True)
-        ocp_solver =  AcadosOcpSolver(ocp, json_file = model_name+'acados_ocp.json')
+        if make_model :
+            ocp_solver =  AcadosOcpSolver(ocp, json_file = model_name+'acados_ocp.json')
+
+        else :
+            ocp_solver =  AcadosOcpSolver(ocp, json_file = model_name+'acados_ocp.json', build = False, generate = True)
+
+
         return ocp_solver
+    
 args = {}
 make_model = True
-N = 30
+N = 15
 dt = 0.01
 problems = []
 
                                 ###################### FRONT MODEL ########################
-# The joint list
+# # The joint list
+# args['joints_name_list'] = ['FR_hip_joint', 'FR_thigh_joint', 'FR_calf_joint','FL_hip_joint', 'FL_thigh_joint', 'FL_calf_joint']
+# #list of the frame for the contacts
+# args['contact_frame_name_list'] = ['FR_foot','FL_foot']
+# #path for the complete model
+# args['model_path_wb'] = '/home/iit.local/lamatucci/DWMPC/urdf/go1.urdf'
+# # The joint list
+# args['joints_name_list_wb'] = ['FR_hip_joint', 'FR_thigh_joint', 'FR_calf_joint',
+#     'FL_hip_joint', 'FL_thigh_joint', 'FL_calf_joint',
+#     'RR_hip_joint', 'RR_thigh_joint', 'RR_calf_joint',
+#     'RL_hip_joint', 'RL_thigh_joint', 'RL_calf_joint'
+# ]
+# args['contact_frame_name_list_wb'] = ['FR_foot','FL_foot','RR_foot','RL_foot']
+
 args['joints_name_list'] = ['FR_hip_joint', 'FR_thigh_joint', 'FR_calf_joint','FL_hip_joint', 'FL_thigh_joint', 'FL_calf_joint']
 #list of the frame for the contacts
 args['contact_frame_name_list'] = ['FR_foot','FL_foot']
 #path for the complete model
-args['model_path_wb'] = '../urdfs/aliengo.urdf'
+args['model_path_wb'] = '/home/iit.local/lamatucci/DWMPC/urdf/go1.urdf'
 # The joint list
 args['joints_name_list_wb'] = ['FR_hip_joint', 'FR_thigh_joint', 'FR_calf_joint',
     'FL_hip_joint', 'FL_thigh_joint', 'FL_calf_joint',
@@ -368,4 +467,4 @@ args['contact_frame_name_list'] = ['RR_foot','RL_foot']
 args['s_idx'] = 2
 
 back = ocp_formulation(args)
-back_solver = front.getOptimalProblem(model_name = "back")
+back_solver = back.getOptimalProblem(model_name = "back")
