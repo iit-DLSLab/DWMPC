@@ -38,19 +38,19 @@ target_link_libraries(${MODULE_LIBRARY_NAME}
 	# add other linked libraries here
 )
 #Add test.cpp as an executable
-add_executable(test
-	src/test.cpp
-)
+# add_executable(test
+# 	src/test.cpp
+# )
 
-target_link_libraries(test
-	PUBLIC
-	${MODULE_LIBRARY_NAME}
-	vis_module
-)
-target_link_directories( test
-	PUBLIC
-	/usr/lib/dls2/motion_generators/vis
-)
+# target_link_libraries(test
+# 	PUBLIC
+# 	${MODULE_LIBRARY_NAME}
+# 	vis_module
+# )
+# target_link_directories( test
+# 	PUBLIC
+# 	/usr/lib/dls2/motion_generators/vis
+# )
 
 pybind11_add_module(pydwmpc src/py_dwmpc.cpp)
 target_link_libraries(pydwmpc
@@ -84,8 +84,8 @@ install(
 	COMPONENT   ${MODULE_LIBRARY_NAME}
 	DESTINATION /usr/lib/dls2/controllers/${PLUGIN_NAME}
 )
-install(
-	TARGETS test 
-	RUNTIME DESTINATION /usr/lib/dls2/controllers/${PLUGIN_NAME}
-	COMPONENT ${MODULE_LIBRARY_NAME} )
+# install(
+# 	TARGETS test 
+# 	RUNTIME DESTINATION /usr/lib/dls2/controllers/${PLUGIN_NAME}
+# 	COMPONENT ${MODULE_LIBRARY_NAME} )
 install(TARGETS pydwmpc DESTINATION /usr/lib/dls2/controllers/${PLUGIN_NAME})

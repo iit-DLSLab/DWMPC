@@ -66,25 +66,25 @@ void acadosInterface::init(const int N)
  * @param initial_condition The initial condition vector.
  * @param problem The name of the problem ("front" or "back").
  */
-void acadosInterface::setInitialCondition(const std::vector<double> &initial_condition,const std::string &problem)
+void acadosInterface::setInitialCondition(std::vector<double> &initial_condition,const std::string &problem)
 {
     int idxbx0[nx_]; // Array to store the indices of the box constraints
-    double lbx0[nx_]; // Array to store the lower bounds of the box constraints
-    double ubx0[nx_]; // Array to store the upper bounds of the box constraints
+    // double lbx0[nx_]; // Array to store the lower bounds of the box constraints
+    // double ubx0[nx_]; // Array to store the upper bounds of the box constraints
 
     // Set the indices, lower bounds, and upper bounds for the box constraints
     for (int counter{0};counter<nx_;counter++)
     {
         idxbx0[counter] = counter;
-        lbx0[counter] = initial_condition[counter];
-        ubx0[counter] = initial_condition[counter];
+        // lbx0[counter] = initial_condition[counter];
+        // ubx0[counter] = initial_condition[counter];
     }
 
 
     // Set the initial condition constraints for the optimization problem
     ocp_nlp_constraints_model_set(&nlp_config[problem], &nlp_dims[problem], &nlp_in[problem], 0, "idxbx", idxbx0);
-    ocp_nlp_constraints_model_set(&nlp_config[problem], &nlp_dims[problem], &nlp_in[problem], 0, "lbx", lbx0);
-    ocp_nlp_constraints_model_set(&nlp_config[problem], &nlp_dims[problem], &nlp_in[problem], 0, "ubx", ubx0);
+    ocp_nlp_constraints_model_set(&nlp_config[problem], &nlp_dims[problem], &nlp_in[problem], 0, "lbx", initial_condition.data());
+    ocp_nlp_constraints_model_set(&nlp_config[problem], &nlp_dims[problem], &nlp_in[problem], 0, "ubx", initial_condition.data());
 }
 /**
  * Set the parameter values for the optimization problem.
@@ -93,47 +93,47 @@ void acadosInterface::setInitialCondition(const std::vector<double> &initial_con
  * @param np The number of parameters per stage.
  * @param problem The name of the problem ("front" or "back").
  */
-void acadosInterface::setParameter(const std::vector<std::vector<double>> &parameter, const int np, const std::string &problem)
+void acadosInterface::setParameter(std::vector<std::vector<double>> &parameter, const int np, const std::string &problem)
 {
     // This is written for the case of the quadruped robot defined in front and back
     // generalized version needs to be written need a genral version of *_acados_update_params
-    double p[np]; // Array to store the parameter values
+    // double p[np]; // Array to store the parameter values
 
     if (problem == "front")
     {
         for (int k = 0; k <= N_; k++)
         {
-            std::copy(parameter[k].begin(), parameter[k].end(), p);
-            front_acados_update_params(front_capsule_, k, p, np); // Update the parameter values for the front problem
+            // std::copy(parameter[k].begin(), parameter[k].end(), p);
+            front_acados_update_params(front_capsule_, k,parameter[k].data(), np); // Update the parameter values for the front problem
         }
     }
     else if (problem == "back")
     {
         for (int k = 0; k <= N_; k++)
         {
-            std::copy(parameter[k].begin(), parameter[k].end(), p);
-            back_acados_update_params(back_capsule_, k, p, np); // Update the parameter values for the back problem
+            // std::copy(parameter[k].begin(), parameter[k].end(), p);
+            back_acados_update_params(back_capsule_, k, parameter[k].data(), np); // Update the parameter values for the back problem
         }
     }
 }
-void acadosInterface::setConstraints(const std::vector<std::vector<double>> &constraint, const int nlh0, const int nlh, const std::string &problem)
+void acadosInterface::setConstraints( std::vector<std::vector<double>> &constraint, const int nlh0, const int nlh, const std::string &problem)
 {
-    double lh0[nlh0];
-    double lh[nlh]; 
+    // double lh0[nlh0];
+    // double lh[nlh]; 
     
     for (int k = 0; k <= N_; k++)
     { 
         if(k == 0)
         {   
-            std::copy(constraint[k].begin(), constraint[k].end(), lh0);
+            // std::copy(constraint[k].begin(), constraint[k].end(), lh0);
             ocp_nlp_constraints_model_set(&nlp_config[problem],
-            &nlp_dims[problem],&nlp_in[problem],k,"lh", lh0);
+            &nlp_dims[problem],&nlp_in[problem],k,"lh", constraint[k].data());
         }
         else
         {   
-            std::copy(constraint[k].begin(), constraint[k].end(), lh);
+            // std::copy(constraint[k].begin(), constraint[k].end(), lh);
             ocp_nlp_constraints_model_set(&nlp_config[problem],
-            &nlp_dims[problem],&nlp_in[problem],k,"lh", lh);
+            &nlp_dims[problem],&nlp_in[problem],k,"lh", constraint[k].data());
         }
     }
 }
@@ -143,37 +143,37 @@ void acadosInterface::setConstraints(const std::vector<std::vector<double>> &con
  * @param weight The weight matrix for each time step size [nx+nu X nx+nu] X N [nx X nx] X 1 for the last stage.
  * @param problem The name of the problem ("front" or "back").
  */
-void acadosInterface::setWeight(const std::vector<std::vector<double>> &weight,const int &n_w0,const int &n_w, const int &n_we,const std::string &problem)
+void acadosInterface::setWeight(std::vector<std::vector<double>> &weight,const int &n_w0,const int &n_w, const int &n_we,const std::string &problem)
 {
 
-    double W_0[n_w0*n_w0];
+    // double W_0[n_w0*n_w0];
 
-    memset(W_0, 0.0, sizeof(W_0));
-        for (int r = 0; r < n_w0; r++)
-        {
-            W_0[r+r*(n_w0)] = weight[0][r];
-        }
-    ocp_nlp_cost_model_set( &nlp_config[problem], &nlp_dims[problem], &nlp_in[problem], 0, "W", W_0);
+    // memset(W_0, 0.0, sizeof(W_0));
+        // for (int r = 0; r < n_w0; r++)
+        // {
+        //     W0_[r+r*(n_w0)] = weight[0][r];
+        // }
+    // ocp_nlp_cost_model_set( &nlp_config[problem], &nlp_dims[problem], &nlp_in[problem], 0, "W", W0_);
 
-    double W[n_w*n_w];
+    // double W[n_w*n_w];
 
-    memset(W, 0.0, sizeof(W));
+    // memset(W, 0.0, sizeof(W));
 
-    for(int k{1}; k < N_;k++)
+    for(int k{0}; k < N_+1;k++)
     {
-        for (int r = 0; r < n_w ; r++)
-        {
-            W[r+r*(n_w)] = weight[k][r];
-        }
-        ocp_nlp_cost_model_set( &nlp_config[problem], &nlp_dims[problem], &nlp_in[problem], k, "W", W);
+        // for (int r = 0; r < n_w ; r++)
+        // {
+        //     W_[r+r*(n_w)] = weight[k][r];
+        // }
+        ocp_nlp_cost_model_set( &nlp_config[problem], &nlp_dims[problem], &nlp_in[problem], k, "W", weight[k].data());
     }
-    double W_e[n_we*n_we];
-    memset(W_e, 0.0, sizeof(W_e));
-        for (int r = 0; r < n_we; r++)
-        {
-            W_e[r+r*(n_we)] = weight[N_][r];
-        }
-    ocp_nlp_cost_model_set( &nlp_config[problem], &nlp_dims[problem], &nlp_in[problem], N_, "W", W_e);
+    // double W_e[n_we*n_we];
+    // memset(W_e, 0.0, sizeof(W_e));
+    //     for (int r = 0; r < n_we; r++)
+    //     {
+    //         W_e[r+r*(n_we)] = weight[N_][r];
+    //     }
+    // ocp_nlp_cost_model_set( &nlp_config[problem], &nlp_dims[problem], &nlp_in[problem], N_, "W", W_e);
 }
 
 /**
@@ -184,26 +184,26 @@ void acadosInterface::setWeight(const std::vector<std::vector<double>> &weight,c
  * @param nu__ref The number of inputs related element in the reference vector.
  * @param problem The name of the problem ("front" or "back").
  */
-void acadosInterface::setReference(const std::vector<std::vector<double>> &reference, const int n_ref0, const int n_ref, const int n_ref_e, const std::string &problem)
+void acadosInterface::setReference(std::vector<std::vector<double>> &reference, const int n_ref0, const int n_ref, const int n_ref_e, const std::string &problem)
 {   
-    double y_ref0[n_ref0];
-    std::copy(reference[0].begin(), reference[0].end(), y_ref0);
-    ocp_nlp_cost_model_set(&nlp_config[problem], &nlp_dims[problem], &nlp_in[problem], 0, "yref", y_ref0);
+    // double y_ref0[n_ref0];
+    // std::copy(reference[0].begin(), reference[0].end(), y_ref0);
+    ocp_nlp_cost_model_set(&nlp_config[problem], &nlp_dims[problem], &nlp_in[problem], 0, "yref", reference[0].data());
 
     // The reference is a vector of vectors of size (nx_ref+nu_ref) X N and nx_ref X 1 for the last stage
-    double y_ref[n_ref]; // Array to store the reference values
+    // double y_ref[n_ref]; // Array to store the reference values
     // Set the reference for each stage of the optimization problem
     for (int k = 1; k < N_; k++)
     {
         // Copy the reference values to the y_ref array
-        std::copy(reference[k].begin(), reference[k].end(), y_ref);
+        // std::copy(reference[k].begin(), reference[k].end(), y_ref);
         // Set the reference for the current stage of the optimization problem
-        ocp_nlp_cost_model_set(&nlp_config[problem], &nlp_dims[problem], &nlp_in[problem], k, "yref", y_ref);
+        ocp_nlp_cost_model_set(&nlp_config[problem], &nlp_dims[problem], &nlp_in[problem], k, "yref", reference[k].data());
     }
     // Set the reference for the last stage of the optimization problem
-    double y_ref_e[n_ref_e];
-    std::copy(reference[N_].begin(), reference[N_].end(), y_ref_e);
-    ocp_nlp_cost_model_set(&nlp_config[problem], &nlp_dims[problem], &nlp_in[problem], N_, "yref", y_ref_e);
+    // double y_ref_e[n_ref_e];
+    // std::copy(reference[N_].begin(), reference[N_].end(), y_ref_e);
+    ocp_nlp_cost_model_set(&nlp_config[problem], &nlp_dims[problem], &nlp_in[problem], N_, "yref", reference[N_].data());
 }
 
 
