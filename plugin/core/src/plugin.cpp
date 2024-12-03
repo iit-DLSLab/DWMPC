@@ -97,8 +97,10 @@ namespace controllers
         Eigen::Vector4d current_contact{};
         for (auto leg : *pRobot_->getLegs())
         {   
-            foot_op.col(i) = input_base_state.pose_.toPosition() + input_base_state.pose_.toRotationMatrix().transpose()*feet_position[leg];             
-            current_contact[i] = input_base_state.stance_status_[leg];
+            // foot_op.col(i) = input_base_state.pose_.toPosition() + input_base_state.pose_.toRotationMatrix().transpose()*feet_position[leg];             
+            // current_contact[i] = input_base_state.stance_status_[leg];
+            foot_op.col(i) = feet_position[leg];             
+            current_contact[i] = 0;
             i += 1;
         }
         
@@ -136,27 +138,32 @@ namespace controllers
                   des_q,//des_q
                   des_dq//des_dq
                   );
-        // auto end = std::chrono::high_resolution_clock::now();
-        // std::cout << "Time to run dwmpc: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
-        //test publish vis message
-       auto robot_jacobian_tmp = this->pRobot_->makeLegDataMap<Eigen::Matrix3d>(Eigen::Matrix3d::Zero());
-       auto robot_jacobian = this->pRobot_->makeFeetJacobian();
+    //test publish vis message
+    //    auto robot_jacobian_tmp = this->pRobot_->makeLegDataMap<Eigen::Matrix3d>(Eigen::Matrix3d::Zero());
+    //    auto robot_jacobian = this->pRobot_->makeFeetJacobian();
+        // Eigen::MatrixXd robot_jacobian_LF;
+        // EIgen::MatrixXd robot_jacobian_RF;
+        // Eigen::MatrixXd robot_jacobian_LH;
+        // Eigen::MatrixXd robot_jacobian_RH;
+        
+        // this->pRobot_->computeLimbsJacobian(input_blind_state.joints_position_, "lf_foot", robot_jacobian_LF);
+        // this->pRobot_->computeLimbsJacobian(input_blind_state.joints_position_, "rf_foot", robot_jacobian_RF);
+        // this->pRobot_->computeLimbsJacobian(input_blind_state.joints_position_, "lh_foot", robot_jacobian_LH);
+        // this->pRobot_->computeLimbsJacobian(input_blind_state.joints_position_, "rh_foot", robot_jacobian_RH);
 
-        this->pRobot_->updateLinearJacobian(input_blind_state.joints_position_, robot_jacobian);
-
-        robot_jacobian_tmp["LF"] = robot_jacobian["LF"].block<3,3>(0,0);
-        robot_jacobian_tmp["RF"] = robot_jacobian["RF"].block<3,3>(0,0);
-        robot_jacobian_tmp["LH"] = robot_jacobian["LH"].block<3,3>(0,0);
-        robot_jacobian_tmp["RH"] = robot_jacobian["RH"].block<3,3>(0,0);
+        // robot_jacobian_tmp["LF"] = robot_jacobian_LF.block<3,3>(0,0);
+        // robot_jacobian_tmp["RF"] = robot_jacobian["RF"].block<3,3>(0,0);
+        // robot_jacobian_tmp["LH"] = robot_jacobian["LH"].block<3,3>(0,0);
+        // robot_jacobian_tmp["RH"] = robot_jacobian["RH"].block<3,3>(0,0);
 
         Eigen::MatrixXd grf_m;
         grf_m.setZero(3, 4); 
         int counter_leg = 0;
-        for(auto leg: *this->pRobot_->getLegs())
-        {
-            grf_m.col(counter_leg) = -input_base_state.pose_.toRotationMatrix().transpose()*robot_jacobian_tmp[leg].transpose().inverse()*input_blind_state.joints_effort_.vec_(leg);
-            counter_leg += 1;
-        }
+        // for(auto leg: *this->pRobot_->getLegs())
+        // {
+        //     grf_m.col(counter_leg) = -input_base_state.pose_.toRotationMatrix().transpose()*robot_jacobian_tmp[leg].transpose().inverse()*input_blind_state.joints_effort_.vec_(leg);
+        //     counter_leg += 1;
+        // }
 
          for (int leg{0};leg < this->pRobot_->getNLEGS();leg++)
         {   
@@ -192,7 +199,7 @@ namespace controllers
         dls::Pose pose_k;
         auto foot_k = pRobot_->makeLegDataMap<Eigen::Vector3d>(Eigen::Vector3d::Zero()); 
         // input_blind_state.joints_position_.print();
-        for(int k{0};k < 25;k++) //TODO legth of the prediction is arcoded
+        for(int k{0};k < 15;k++) //TODO legth of the prediction is arcoded
         {   
             q_k = data["wb"].q[k];
             pRobot_->forwardKinematics(q_k, foot_k);
@@ -236,9 +243,7 @@ namespace controllers
         output_tau.torques_ = des_tau;
         // Publish outputs
         write();
-        // std::cout << "Time to run dwmpc: " << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start).count() << " us" << std::endl;
         dwmpc.prepare();
-        
     }
     bool DwmpcPlugin::checkActivation()
     {
