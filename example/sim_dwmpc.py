@@ -66,7 +66,7 @@ while True:
         q = qpos[7:].copy()
 
         dp = qvel[:3].copy()
-        omega = qvel[3:6]
+        omega = env.base_configuration[:3,:3]@qvel[3:6]
         dq = qvel[6:].copy()
 
         # q[0] = - q[0]
