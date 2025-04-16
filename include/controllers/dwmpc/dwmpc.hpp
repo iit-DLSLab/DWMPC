@@ -121,6 +121,7 @@ namespace controllers
 
         Timer timer_; //timer to define the gait
         std::vector<bezier_curves_t> bcs_{4}; // TODO CHANGE THIS
+        std::vector<Eigen::Vector3d> liftoff_pos_{4}; // liftoff position for each leg
         std::map<std::string,std::vector<double>> desired_; // desired values for the controller
 
         // TO DO change this to separate class that reads from a config file

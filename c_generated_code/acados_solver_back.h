@@ -63,7 +63,7 @@
 #define BACK_NY0    74
 #define BACK_NY     74
 #define BACK_NYN    30
-#define BACK_N      30
+#define BACK_N      15
 #define BACK_NH     6
 #define BACK_NHN    0
 #define BACK_NH0    0
@@ -94,7 +94,6 @@ typedef struct back_solver_capsule
     unsigned int nlp_np;
 
     /* external functions */
-
     // dynamics
 
     external_function_external_param_casadi *discr_dyn_phi_fun;
@@ -158,7 +157,6 @@ ACADOS_SYMBOL_EXPORT int back_acados_update_time_steps(back_solver_capsule * cap
 ACADOS_SYMBOL_EXPORT int back_acados_update_qp_solver_cond_N(back_solver_capsule * capsule, int qp_solver_cond_N);
 ACADOS_SYMBOL_EXPORT int back_acados_update_params(back_solver_capsule * capsule, int stage, double *value, int np);
 ACADOS_SYMBOL_EXPORT int back_acados_update_params_sparse(back_solver_capsule * capsule, int stage, int *idx, double *p, int n_update);
-ACADOS_SYMBOL_EXPORT int back_acados_set_p_global_and_precompute_dependencies(back_solver_capsule* capsule, double* data, int data_len);
 
 ACADOS_SYMBOL_EXPORT int back_acados_solve(back_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT void back_acados_batch_solve(back_solver_capsule ** capsules, int N_batch);

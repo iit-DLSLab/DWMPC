@@ -25,12 +25,12 @@ class acadosInterface {
         ~acadosInterface();
         void init(const int N);
         // setter
-        void setInitialCondition(const std::vector<double> &initial_condition,const std::string &problem);
+        void setInitialCondition(std::vector<double> &initial_condition,const std::string &problem);
         void warmstart(const std::string &problem);
-        void setParameter(const std::vector<std::vector<double>> &parameter,const  int np, const std::string &problem);
-        void setConstraints(const std::vector<std::vector<double>> &constraint, const int nlh0, const int nlh, const std::string &problem);
-        void setWeight(const std::vector<std::vector<double>> &weight,const int &n_w0,const int &n_w, const int &n_we,const std::string &problem);
-        void setReference(const std::vector<std::vector<double>> &reference,const int n_ref0, const int n_ref, const int n_ref_e, const std::string &problem);
+        void setParameter(std::vector<std::vector<double>> &parameter,const  int np, const std::string &problem);
+        void setConstraints(std::vector<std::vector<double>> &constraint, const int nlh0, const int nlh, const std::string &problem);
+        void setWeight(std::vector<std::vector<double>> &weight,const int &n_w0,const int &n_w, const int &n_we,const std::string &problem);
+        void setReference(std::vector<std::vector<double>> &reference,const int n_ref0, const int n_ref, const int n_ref_e, const std::string &problem);
         void solve();
         void prepare();
         // getter

@@ -14,7 +14,7 @@ robot_leg_joints = dict(FR=['FR_hip_joint', 'FR_thigh_joint', 'FR_calf_joint', ]
 mpc_frequency = 100.0
 state_observables_names = tuple(QuadrupedEnv.ALL_OBS)  # return all available state observables
 
-sim_frequency = 1000.0
+sim_frequency = 200.0
 env = QuadrupedEnv(robot=robot_name,
                    hip_height=0.25,
                    legs_joint_names=robot_leg_joints,  # Joint names of the legs DoF
@@ -69,11 +69,11 @@ while True:
         omega = qvel[3:6]
         dq = qvel[6:].copy()
 
-        q[0] = - q[0]
-        q[6] = - q[6]
+        # q[0] = - q[0]
+        # q[6] = - q[6]
         
-        dq[0] = - dq[0]
-        dq[6] = - dq[6]
+        # dq[0] = - dq[0]
+        # dq[6] = - dq[6]
 
         mpc.run(p,
             quat,
@@ -94,12 +94,12 @@ while True:
         
         mpc.prepare()
         
-        tau[0] = - tau[0]
-        tau[6] = - tau[6]
-        des_q[0] = - des_q[0]
-        des_q[6] = - des_q[6]
-        des_dq[0] = - des_dq[0]
-        des_dq[6] = - des_dq[6]
+        # tau[0] = - tau[0]
+        # tau[6] = - tau[6]
+        # des_q[0] = - des_q[0]
+        # des_q[6] = - des_q[6]
+        # des_dq[0] = - des_dq[0]
+        # des_dq[6] = - des_dq[6]
     action_torque = tau + Kp*(des_q.getList() - qpos[7:]) + Kd*(des_dq.getList() - qvel[6:])
     action = np.zeros(env.mjModel.nu)
     action[env.legs_tau_idx.FL] = action_torque[:3]

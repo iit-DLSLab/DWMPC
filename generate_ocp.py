@@ -431,18 +431,19 @@ problems = []
 # ]
 # args['contact_frame_name_list_wb'] = ['FR_foot','FL_foot','RR_foot','RL_foot']
 
-args['joints_name_list'] = ['FR_hip_joint', 'FR_thigh_joint', 'FR_calf_joint','FL_hip_joint', 'FL_thigh_joint', 'FL_calf_joint']
+args['joints_name_list'] = ['FL_hip_joint', 'FL_thigh_joint', 'FL_calf_joint','FR_hip_joint', 'FR_thigh_joint', 'FR_calf_joint']
 #list of the frame for the contacts
-args['contact_frame_name_list'] = ['FR_foot','FL_foot']
+args['contact_frame_name_list'] = ['FL_foot','FR_foot']
 #path for the complete model
-args['model_path_wb'] = '/home/iit.local/lamatucci/DWMPC/urdf/go1.urdf'
+args['model_path_wb'] = '/home/iit.local/lamatucci/DWMPC/urdf/aliengo.urdf'
 # The joint list
-args['joints_name_list_wb'] = ['FR_hip_joint', 'FR_thigh_joint', 'FR_calf_joint',
+args['joints_name_list_wb'] = [
     'FL_hip_joint', 'FL_thigh_joint', 'FL_calf_joint',
+    'FR_hip_joint', 'FR_thigh_joint', 'FR_calf_joint',
+    'RL_hip_joint', 'RL_thigh_joint', 'RL_calf_joint',
     'RR_hip_joint', 'RR_thigh_joint', 'RR_calf_joint',
-    'RL_hip_joint', 'RL_thigh_joint', 'RL_calf_joint'
 ]
-args['contact_frame_name_list_wb'] = ['FR_foot','FL_foot','RR_foot','RL_foot']
+args['contact_frame_name_list_wb'] = ['FL_foot','FR_foot','RL_foot','RR_foot']
 
 args['s_idx'] = 0
 
@@ -459,10 +460,11 @@ front = ocp_formulation(args)
 front_solver = front.getOptimalProblem(model_name = "front")
                                 ###################### BACK MODEL ########################
 # The joint list
-args['joints_name_list'] = ['RR_hip_joint', 'RR_thigh_joint', 'RR_calf_joint',
-    'RL_hip_joint', 'RL_thigh_joint', 'RL_calf_joint']
+args['joints_name_list'] = [
+    'RL_hip_joint', 'RL_thigh_joint', 'RL_calf_joint',
+    'RR_hip_joint', 'RR_thigh_joint', 'RR_calf_joint']
 #list of the frame for the contacts
-args['contact_frame_name_list'] = ['RR_foot','RL_foot']
+args['contact_frame_name_list'] = ['RL_foot','RR_foot']
 
 args['s_idx'] = 2
 

@@ -19,6 +19,9 @@ class parameter
     int n_ineq{}; // number of inequality constraints for the rest of the nodes
     std::vector<double> lh0{}; // lower bound for inequality constraints for the first node
     std::vector<double> lh{}; // lower bound for inequality constraints for the rest of the nodes
+    int nw0{}; // size of the weight matrix for the first node
+    int nw{}; // size of the weight matrix for the rest of the nodes
+    int nwe{}; // size of the weight matrix for the last node
 };
 class pdata
 {   
@@ -33,6 +36,7 @@ class pdata
     std::vector<std::vector<double>> tau{}; // joint torque
 
     std::vector<std::vector<double>> dual{}; //dual 
+    std::vector<std::vector<double>> residual{}; //residual
 
 };
 class dsolver {

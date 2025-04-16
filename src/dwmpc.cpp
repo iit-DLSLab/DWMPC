@@ -145,6 +145,10 @@ namespace controllers
             }
         }
 
+        solver_param.nw0 = config["nw0"].as<int>();
+        solver_param.nw = config["nw"].as<int>();
+        solver_param.nwe = config["nwe"].as<int>();
+
         ocp_.init(solver_param);
 
         // set the desired to default values
@@ -246,12 +250,12 @@ namespace controllers
         initial_condition["quat"] = {quat.x(),quat.y(),quat.z(),quat.w()};
         initial_condition["dp"] = {dp[0],dp[1],dp[2]};
         initial_condition["omega"] = {omega[0],omega[1],omega[2]};
-        initial_condition["contact"] = {current_contact[1],current_contact[0],current_contact[3],current_contact[2]};
+        initial_condition["contact"] = {current_contact[0],current_contact[1],current_contact[2],current_contact[3]};
         Eigen::Quaterniond desired_quat = desired_orientation;
         //initialize the timer        
         std::vector<double> contact0 {timer_.run(loop_dt)};
         des_contact = contact0;
-        reorder_contact(des_contact);
+        // reorder_contact(des_contact);
 
         time_ += loop_dt;
         //save t and init values for next iteration
@@ -264,8 +268,8 @@ namespace controllers
         Eigen::VectorXd q = q_op;
         Eigen::VectorXd dq = dq_op;
         
-        reorder_joints(q,true);
-        reorder_joints(dq,true);
+        // reorder_joints(q,true);
+        // reorder_joints(dq,true);
 
         for (auto i{0};i < n_joint_wb_;i++)
         {
@@ -274,7 +278,7 @@ namespace controllers
         }
 
         Eigen::MatrixXd foot = foot_op;
-        reorder_contact(foot);
+        // reorder_contact(foot);
         upate_terrain_height(contact0,foot);
         // update the desired values
     
@@ -326,7 +330,7 @@ namespace controllers
         //ref values
 
         Eigen::Vector3d _pos{0,0,0};
-        double _radius{0.003};
+        double _radius{0.01};
         //opti value
         std::map<std::string,pdata> data;
         getFullPrediction(data);
@@ -379,6 +383,15 @@ namespace controllers
             sphere_radius.push_back(_radius);
     
         }
+         for(int leg{0};leg<n_contact_wb_;leg++)
+            {
+                _pos[0] = liftoff_pos_[leg][0] + p[0];
+                _pos[1] = liftoff_pos_[leg][1] + p[1];
+                _pos[2] = liftoff_pos_[leg][2] + p[2];
+                sphere_pos.push_back(_pos);
+                sphere_color.push_back({1,0.12,0, 1});
+                sphere_radius.push_back(_radius + 0.005);
+            }
         
         Eigen::MatrixXd grf;
         grf.setZero(3,n_contact_wb_);
@@ -419,9 +432,9 @@ namespace controllers
         // update desired torque, joint angle and joint velocity
         ocp_.getControl(des_q,des_dq,des_tau);   
         // reorder the joint values
-        reorder_joints(des_q,false);
-        reorder_joints(des_dq,false);
-        reorder_joints(des_tau,false);
+        // reorder_joints(des_q,false);
+        // reorder_joints(des_dq,false);
+        // reorder_joints(des_tau,false);
 
     }
     void Dwmpc::upate_terrain_height(const std::vector<double> &contact0, const Eigen::MatrixXd &foot_op)
@@ -562,7 +575,7 @@ namespace controllers
             }
             if(contact0[idx] < 1 && initial_condition.at("contact")[idx]>0 && std::min((t_leg[idx]-timer_.duty_factor)/(1-timer_.duty_factor),1.0) > 0.6)
             {   
-                std::cout << "leg " << idx << " time "<< std::min((t_leg[idx]-timer_.duty_factor)/(1-timer_.duty_factor),1.0) << std::endl;
+                // std::cout << "leg " << idx << " time "<< std::min((t_leg[idx]-timer_.duty_factor)/(1-timer_.duty_factor),1.0) << std::endl;
                 early_contact[idx] = true;
                 early_contact_[idx] = true;
             }
@@ -570,7 +583,7 @@ namespace controllers
         for(int k {0}; k < N_ + 1; k++)
         {   
             //set dt
-            if(k<5)
+            if(k<3)
             {
                 dt[0] = 0.01;
             }
@@ -615,9 +628,15 @@ namespace controllers
                 for (int leg{0};leg < n_contact_wb_;leg++)
                 {    
                     
-                    // if((contact_seq[k+1][leg] == 0 && contact_seq[k][leg]) > 0 || (contact_seq[k][leg] == 0  && k == 0)) // lift off or already on swing
-                    if((contact_seq[k+1][leg] == 0 && contact_seq[k][leg]) > 0) // lift off or already on swing
+                    // if((contact_seq[k+1][leg] == 0 && contact_seq[k][leg])>0 || (contact_seq[k][leg] == 0  &&  k == 0)) // lift off or already on swing
+                    if((contact_seq[k+1][leg] == 0 && contact_seq[k][leg])) // lift off or already on swing
                     {   
+                        if (k == 0) //save the lift-off position for the next swing leg
+                        {
+                            liftoff_pos_[leg][0] = foot_k[3*leg] - p_k[0];
+                            liftoff_pos_[leg][1] = foot_k[3*leg + 1] - p_k[1];
+                            liftoff_pos_[leg][2] = foot_k[3*leg + 2] - p_k[2];
+                        }
                         //get the yaw from the quaternion
                         // double yaw = std::atan2(2*(desired_.at("quat")[3]*desired_.at("quat")[2] + desired_.at("quat")[0]*desired_.at("quat")[1]), 1 - 2*(desired_.at("quat")[1]*desired_.at("quat")[1] + desired_.at("quat")[2]*desired_.at("quat")[2]));
                         double yaw = std::atan2(2*(initial_condition.at("quat")[3]*initial_condition.at("quat")[2] + initial_condition.at("quat")[0]*initial_condition.at("quat")[1]), 1 - 2*(initial_condition.at("quat")[1]*initial_condition.at("quat")[1] + initial_condition.at("quat")[2]*initial_condition.at("quat")[2]));
@@ -626,8 +645,12 @@ namespace controllers
                         // foothold[0] += p_k[0];
                         // foothold[1] += p_k[1];
 
-                        foothold[0] += 0.5*(desired_.at("dp")[0] + desired_.at("omega")[2]*(cos(yaw)*foot0_[3*leg+1] + sin(yaw)*foot0_[3*leg]))*timer_.duty_factor*timer_.step_freq;
-                        foothold[1] += 0.5*(desired_.at("dp")[1] + desired_.at("omega")[2]*(cos(yaw)*foot0_[3*leg]-sin(yaw)*foot0_[3*leg+1]))*timer_.duty_factor*timer_.step_freq;
+                        foothold[0] += 0.5*(desired_.at("dp")[0]); //+ desired_.at("omega")[2]*(cos(yaw)*foot0_[3*leg+1] + sin(yaw)*foot0_[3*leg]))*timer_.duty_factor*timer_.step_freq;
+                        foothold[1] += 0.5*(desired_.at("dp")[1]); //+ desired_.at("omega")[2]*(cos(yaw)*foot0_[3*leg]-sin(yaw)*foot0_[3*leg+1]))*timer_.duty_factor*timer_.step_freq;
+
+                        //correction with actual speed 
+                        foothold[0] += std::sqrt(desired_.at("robot_height")[0]/9.81)*( initial_condition.at("dp")[0]*cos(yaw) + initial_condition.at("dp")[1]*sin(yaw) - desired_.at("dp")[0]);
+                        foothold[1] += std::sqrt(desired_.at("robot_height")[0]/9.81)*( initial_condition.at("dp")[1]*cos(yaw) - initial_condition.at("dp")[0]*sin(yaw) - desired_.at("dp")[1]);
                         
                         std::vector<Eigen::Vector3d> cp{};
                         bezier_curves_t::curve_constraints_t constraints;
@@ -665,15 +688,41 @@ namespace controllers
                             _t = 0.99;
                         }
                         if(fix_swing[leg])
-                        {   
+                        {    
                             if(early_contact[leg])
                             {
                                 continue;
                             }
-                            Eigen::Vector3d foot_position{bcs_[leg](std::min((_t-timer_.duty_factor)/(1-timer_.duty_factor),1.0))};
+                            double yaw = std::atan2(2*(initial_condition.at("quat")[3]*initial_condition.at("quat")[2] + initial_condition.at("quat")[0]*initial_condition.at("quat")[1]), 1 - 2*(initial_condition.at("quat")[1]*initial_condition.at("quat")[1] + initial_condition.at("quat")[2]*initial_condition.at("quat")[2]));
+                            std::vector<double> foothold{cos(yaw)*foot0_[3*leg]-sin(yaw)*foot0_[3*leg+1],cos(yaw)*foot0_[3*leg+1] + sin(yaw)*foot0_[3*leg],terrain_height_[leg]-p_k[2]};
+                        
+                            // foothold[0] += p_k[0];
+                            // foothold[1] += p_k[1];
+
+                            foothold[0] += 0.5*(desired_.at("dp")[0]); //+ desired_.at("omega")[2]*(cos(yaw)*foot0_[3*leg+1] + sin(yaw)*foot0_[3*leg]))*timer_.duty_factor*timer_.step_freq;
+                            foothold[1] += 0.5*(desired_.at("dp")[1]); //+ desired_.at("omega")[2]*(cos(yaw)*foot0_[3*leg]-sin(yaw)*foot0_[3*leg+1]))*timer_.duty_factor*timer_.step_freq;
+
+                            //correction with actual speed 
+                            foothold[0] += std::sqrt(desired_.at("robot_height")[0]/9.81)*( initial_condition.at("dp")[0]*cos(yaw) + initial_condition.at("dp")[1]*sin(yaw) - desired_.at("dp")[0]);
+                            foothold[1] += std::sqrt(desired_.at("robot_height")[0]/9.81)*( initial_condition.at("dp")[1]*cos(yaw) - initial_condition.at("dp")[0]*sin(yaw) - desired_.at("dp")[1]);
+                            std::vector<Eigen::Vector3d> cp{};
+
+                            bezier_curves_t::curve_constraints_t constraints;
+                            double scaling_factor{0.7105};
+                            double delta_x{0.10};
+                            cp.push_back(liftoff_pos_[leg]);
+                            cp.push_back(Eigen::Vector3d(liftoff_pos_[leg][0]-delta_x/scaling_factor,liftoff_pos_[leg][1],liftoff_pos_[leg][2]+desired_.at("step_height")[0]/scaling_factor));
+                            cp.push_back(Eigen::Vector3d((liftoff_pos_[leg][0]+foothold[0]-delta_x/scaling_factor)/2,(liftoff_pos_[leg][1]+foothold[1])/2,(liftoff_pos_[leg][2]+foothold[2])/2+desired_.at("step_height")[0]/scaling_factor));
+                            cp.push_back(Eigen::Vector3d(foothold[0],foothold[1],foothold[2] + desired_.at("step_height")[0]/scaling_factor));
+                            cp.push_back(Eigen::Vector3d(foothold[0],foothold[1],foothold[2]));
+                            constraints.end_vel = Eigen::Vector3d(0,0,0);
+                            bezier_curves_t bc(cp.begin(), cp.end(),constraints,0,1);
+
+                            Eigen::Vector3d foot_position{bc(std::min((_t-timer_.duty_factor)/(1-timer_.duty_factor),1.0))};
                             foot_k[3*leg] = foot_position[0] + p_k[0];
                             foot_k[3*leg + 1] = foot_position[1] + p_k[1];
                             foot_k[3*leg + 2] =  foot_position[2] + p_k[2];
+
                         }
                         else
                         {
@@ -813,11 +862,11 @@ namespace controllers
     {
         ocp_.getData(prediction);   
         //reorder q and dq
-        for(int k{0};k<N_+1;k++)
-        {
-            reorder_joints(prediction["wb"].q[k],false);
-            reorder_joints(prediction["wb"].dq[k],false);
-        }      
+        // for(int k{0};k<N_+1;k++)
+        // {
+        //     reorder_joints(prediction["wb"].q[k],false);
+        //     reorder_joints(prediction["wb"].dq[k],false);
+        // }      
     }
     void Dwmpc::prepare()
     {

@@ -39,8 +39,6 @@
 
 // example specific
 #include "back_model/back_model.h"
-
-
 #include "back_constraints/back_constraints.h"
 #include "back_cost/back_cost.h"
 
@@ -326,8 +324,6 @@ void back_acados_create_setup_functions(back_solver_capsule* capsule)
         capsule->__CAPSULE_FNC__.casadi_work = & __MODEL_BASE_FNC__ ## _work; \
         external_function_external_param_casadi_create(&capsule->__CAPSULE_FNC__ ); \
     } while(false)
-
-
     // constraints.constr_type == "BGH" and dims.nh > 0
     capsule->nl_constr_h_fun_jac = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*(N-1));
     for (int i = 0; i < N-1; i++) {
@@ -433,34 +429,19 @@ void back_acados_setup_nlp_in(back_solver_capsule* capsule, const int N, double*
     {double* time_steps = malloc(N*sizeof(double));
         time_steps[0] = 0.01;
         time_steps[1] = 0.01;
-        time_steps[2] = 0.009999999999999998;
-        time_steps[3] = 0.010000000000000002;
-        time_steps[4] = 0.03000000000000001;
-        time_steps[5] = 0.03;
+        time_steps[2] = 0.03;
+        time_steps[3] = 0.03;
+        time_steps[4] = 0.03;
+        time_steps[5] = 0.030000000000000013;
         time_steps[6] = 0.03;
         time_steps[7] = 0.03;
         time_steps[8] = 0.03;
         time_steps[9] = 0.03;
-        time_steps[10] = 0.03;
+        time_steps[10] = 0.030000000000000027;
         time_steps[11] = 0.030000000000000027;
         time_steps[12] = 0.030000000000000027;
         time_steps[13] = 0.030000000000000027;
         time_steps[14] = 0.030000000000000027;
-        time_steps[15] = 0.030000000000000027;
-        time_steps[16] = 0.030000000000000027;
-        time_steps[17] = 0.030000000000000027;
-        time_steps[18] = 0.030000000000000027;
-        time_steps[19] = 0.030000000000000027;
-        time_steps[20] = 0.030000000000000027;
-        time_steps[21] = 0.030000000000000027;
-        time_steps[22] = 0.030000000000000027;
-        time_steps[23] = 0.030000000000000027;
-        time_steps[24] = 0.030000000000000027;
-        time_steps[25] = 0.030000000000000027;
-        time_steps[26] = 0.030000000000000027;
-        time_steps[27] = 0.030000000000000027;
-        time_steps[28] = 0.030000000000000027;
-        time_steps[29] = 0.030000000000000027;
         back_acados_update_time_steps(capsule, N, time_steps);
         free(time_steps);
     }
@@ -941,7 +922,7 @@ int with_solution_sens_wrt_params = false;
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "levenberg_marquardt", &levenberg_marquardt);
 
     /* options QP solver */
-    int qp_solver_cond_N;const int qp_solver_cond_N_ori = 30;
+    int qp_solver_cond_N;const int qp_solver_cond_N_ori = 15;
     qp_solver_cond_N = N < qp_solver_cond_N_ori ? N : qp_solver_cond_N_ori; // use the minimum value here
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_cond_N", &qp_solver_cond_N);
 
@@ -949,8 +930,6 @@ int with_solution_sens_wrt_params = false;
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "ext_qp_res", &nlp_solver_ext_qp_res);
     // set HPIPM mode: should be done before setting other QP solver options
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_hpipm_mode", "SPEED_ABS");
-
-
 
 
     int as_rti_iter = 1;
@@ -1178,15 +1157,6 @@ int back_acados_update_params_sparse(back_solver_capsule * capsule, int stage, i
 }
 
 
-int back_acados_set_p_global_and_precompute_dependencies(back_solver_capsule* capsule, double* data, int data_len)
-{
-
-    printf("p_global is not defined, back_acados_set_p_global_and_precompute_dependencies does nothing.\n");
-}
-
-
-
-
 int back_acados_solve(back_solver_capsule* capsule)
 {
     // solve NLP
@@ -1262,8 +1232,6 @@ int back_acados_free(back_solver_capsule* capsule)
     }
     free(capsule->nl_constr_h_fun_jac);
     free(capsule->nl_constr_h_fun);
-
-
 
     return 0;
 }

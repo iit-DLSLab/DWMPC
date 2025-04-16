@@ -63,7 +63,7 @@
 #define FRONT_NY0    74
 #define FRONT_NY     74
 #define FRONT_NYN    30
-#define FRONT_N      30
+#define FRONT_N      15
 #define FRONT_NH     6
 #define FRONT_NHN    0
 #define FRONT_NH0    0
@@ -94,7 +94,6 @@ typedef struct front_solver_capsule
     unsigned int nlp_np;
 
     /* external functions */
-
     // dynamics
 
     external_function_external_param_casadi *discr_dyn_phi_fun;
@@ -158,7 +157,6 @@ ACADOS_SYMBOL_EXPORT int front_acados_update_time_steps(front_solver_capsule * c
 ACADOS_SYMBOL_EXPORT int front_acados_update_qp_solver_cond_N(front_solver_capsule * capsule, int qp_solver_cond_N);
 ACADOS_SYMBOL_EXPORT int front_acados_update_params(front_solver_capsule * capsule, int stage, double *value, int np);
 ACADOS_SYMBOL_EXPORT int front_acados_update_params_sparse(front_solver_capsule * capsule, int stage, int *idx, double *p, int n_update);
-ACADOS_SYMBOL_EXPORT int front_acados_set_p_global_and_precompute_dependencies(front_solver_capsule* capsule, double* data, int data_len);
 
 ACADOS_SYMBOL_EXPORT int front_acados_solve(front_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT void front_acados_batch_solve(front_solver_capsule ** capsules, int N_batch);

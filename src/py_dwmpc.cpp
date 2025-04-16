@@ -16,43 +16,55 @@ PYBIND11_MAKE_OPAQUE(std::vector<double>)
 namespace controllers
 {
 PYBIND11_MODULE(pydwmpc, m) {
+    py::class_<pdata>(m, "pdata")
+        .def(py::init<>())
+        .def_readwrite("p", &pdata::p, "Position")
+        .def_readwrite("quat", &pdata::quat, "Quaternion")
+        .def_readwrite("q", &pdata::q, "Joint angles")
+        .def_readwrite("dp", &pdata::dp, "Linear velocity prediction")
+        .def_readwrite("omega", &pdata::omega, "Angular velocity")
+        .def_readwrite("dq", &pdata::dq, "Joint velocity")
+        .def_readwrite("grf", &pdata::grf, "Ground reaction forces")
+        .def_readwrite("tau", &pdata::tau, "Joint torque")
+        .def_readwrite("dual", &pdata::dual, "Dual variables")
+        .def_readwrite("residual", &pdata::residual, "Residuals");
     py::class_<std::vector<double>>(m, "DoubleVector")
-    .def(py::init<>())
-    .def(py::init<const std::vector<double>&>())  // Initialize from a list of double
-    .def(py::init([](py::list list) {
-        std::vector<double> vec;
-        for (auto item : list) {
-            vec.push_back(py::cast<double>(item));
-        }
-        return new std::vector<double>(vec);
-    }))
-    .def("clear", &std::vector<double>::clear)
-    .def("pop_back", &std::vector<double>::pop_back)
-    .def("__len__", [](const std::vector<double> &v) { return v.size(); })
-    .def("__iter__", [](std::vector<double> &v) {
-      return py::make_iterator(v.begin(), v.end());
-    }, py::keep_alive<0, 1>())
-    .def("__getitem__", [](const std::vector<double> &v, size_t i) {
-        if (i >= v.size()) throw py::index_error();
-        return v[i];})
-    .def("__setitem__", [](std::vector<double> &v, size_t i, double val) {
-        if (i >= v.size()) throw py::index_error();
-        v[i] = val;
-    })
-    .def("print", [](const std::vector<double> &v) {
-        for (const auto& item : v) {
-             std::cout << item << " ";
-        }
-        std::cout << std::endl;
-    })
-    .def("getList", [](const std::vector<double>& v) {
-        py::list list;
-        for (const auto& item : v) {
-            list.append(item);
-        }
-        return list;
+        .def(py::init<>())
+        .def(py::init<const std::vector<double>&>())  // Initialize from a list of double
+        .def(py::init([](py::list list) {
+            std::vector<double> vec;
+            for (auto item : list) {
+                vec.push_back(py::cast<double>(item));
+            }
+            return new std::vector<double>(vec);
+        }))
+        .def("clear", &std::vector<double>::clear)
+        .def("pop_back", &std::vector<double>::pop_back)
+        .def("__len__", [](const std::vector<double> &v) { return v.size(); })
+        .def("__iter__", [](std::vector<double> &v) {
+          return py::make_iterator(v.begin(), v.end());
+        }, py::keep_alive<0, 1>())
+        .def("__getitem__", [](const std::vector<double> &v, size_t i) {
+            if (i >= v.size()) throw py::index_error();
+            return v[i];})
+        .def("__setitem__", [](std::vector<double> &v, size_t i, double val) {
+            if (i >= v.size()) throw py::index_error();
+            v[i] = val;
         })
-    ;
+        .def("print", [](const std::vector<double> &v) {
+            for (const auto& item : v) {
+                 std::cout << item << " ";
+            }
+            std::cout << std::endl;
+        })
+        .def("getList", [](const std::vector<double>& v) {
+            py::list list;
+            for (const auto& item : v) {
+                list.append(item);
+            }
+            return list;
+            })
+        ;
     py::class_<Dwmpc>(m, "Dwmpc")
         .def(py::init<>())  // Assuming Dwmpc has a default constructor
         .def("init", &Dwmpc::init)
@@ -83,7 +95,6 @@ PYBIND11_MODULE(pydwmpc, m) {
         .def("reset", &Dwmpc::reset)
         .def("startWalking", &Dwmpc::startWalking)
         .def("stopWalking", &Dwmpc::stopWalking)
-        .def("getFullPrediction", &Dwmpc::getFullPrediction)
         .def("prepare", &Dwmpc::prepare)
         .def("sineWave", &Dwmpc::sineWave)
         .def("setSineParam", &Dwmpc::setSineParam)
@@ -92,6 +103,12 @@ PYBIND11_MODULE(pydwmpc, m) {
         .def("getWeight", &Dwmpc::getWeight)
         .def("goHandStand", &Dwmpc::goHandStand)
         .def("stopHandStand", &Dwmpc::stopHandStand)
-        .def("setStepHeight", &Dwmpc::setStepHeight);
+        .def("setStepHeight", &Dwmpc::setStepHeight)
+        .def("getFullPrediction", [](Dwmpc &self) {
+            // Wrapper function for getFullPrediction to create and return a Python dictionary
+            std::map<std::string, pdata> prediction;
+            self.getFullPrediction(prediction);
+            return prediction; // Pybind11 converts std::map<std::string, pdata> to a Python dict
+        }, "Retrieve the full prediction data");
 }
 } //namespace controllers

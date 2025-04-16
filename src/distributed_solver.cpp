@@ -51,6 +51,7 @@ void dsolver::solve( bool &do_init,
                 data_[name].q.push_back(q);
                 data_[name].dq.push_back(dq);
                 data_[name].dual.push_back(std::vector<double>(6,0));
+                data_[name].residual.push_back(std::vector<double>(6,0));
             }
         }
         max_iterations = solver_param_.max_iteration;
@@ -303,115 +304,140 @@ void dsolver::solve( bool &do_init,
                 }
                 problem_param.push_back(param_k);
                 ////  ============ WEIGHT  ============
-                std::vector<double> weight_k;
-
-                // weight p 
-                weight_k.push_back(weight_vec.at("p")[0]);
-                weight_k.push_back(weight_vec.at("p")[1]);
-                weight_k.push_back(weight_vec.at("p")[2]);
-
-                // weight quat
-                weight_k.push_back(weight_vec.at("quat")[0]);
-                weight_k.push_back(weight_vec.at("quat")[1]);
-                weight_k.push_back(weight_vec.at("quat")[2]);
-
-                // weight q
-                for(auto idx : solver_param_.subsystems_map_joint[problem])
-                {
-                    weight_k.push_back(weight_vec.at("q")[0]);
-                }
-                
-                // weight dp
-                weight_k.push_back(weight_vec.at("dp")[0]);
-                weight_k.push_back(weight_vec.at("dp")[1]);
-                weight_k.push_back(weight_vec.at("dp")[2]);
-
-                // weight omega
-                weight_k.push_back(weight_vec.at("omega")[0]);
-                weight_k.push_back(weight_vec.at("omega")[1]);
-                weight_k.push_back(weight_vec.at("omega")[2]);
-
-                // weight dq
-                for(auto idx : solver_param_.subsystems_map_joint[problem])
-                {
-                    weight_k.push_back(weight_vec.at("dq")[0]);
-                }
-
-                // weight foot
-                for(auto idx : solver_param_.subsystems_map_contact[problem])
-                {   
-                    if (param.at("contact_seq")[k][idx] == 1)
-                    {
-                        weight_k.push_back(weight_vec.at("foot_stance")[0]);
-                        weight_k.push_back(weight_vec.at("foot_stance")[1]);
-                        weight_k.push_back(weight_vec.at("foot_stance")[2]);
-                    }
-                    else
-                    {
-                        weight_k.push_back(weight_vec.at("foot_swing")[0]);
-                        weight_k.push_back(weight_vec.at("foot_swing")[1]);
-                        weight_k.push_back(weight_vec.at("foot_swing")[2]);
-                    }
-                }
-                if (k < solver_param_.N_)
-                {
-                    // weight tau
-                    for(auto idx : solver_param_.subsystems_map_joint[problem])
-                    {
-                        weight_k.push_back(weight_vec.at("tau")[0]);
-                    }
-
-                    // weight grf
-                    for(auto idx : solver_param_.subsystems_map_contact["wb"])
-                    {
-                        weight_k.push_back(weight_vec.at("grf")[0]);
-                        weight_k.push_back(weight_vec.at("grf")[0]);
-                        weight_k.push_back(weight_vec.at("grf")[0]);
-                    }
-                
-                    // weight consensus 
-                    weight_k.push_back(weight_vec.at("consensus")[0]);
-                    weight_k.push_back(weight_vec.at("consensus")[0]);
-                    weight_k.push_back(weight_vec.at("consensus")[0]);
-                    weight_k.push_back(weight_vec.at("consensus")[0]);
-                    weight_k.push_back(weight_vec.at("consensus")[0]);
-                    weight_k.push_back(weight_vec.at("consensus")[0]);
-                }
+                int nw{0};
                 if(k == 0)
                 {
-                    for(int idx{0};idx < solver_param_.n_ineq_0;idx++)
-                    {
-                        weight_k.push_back(1);
-                    }
+                    nw = solver_param_.nw0;
+                }
+                else if(k == solver_param_.N_)
+                {
+                    nw = solver_param_.nwe;
                 }
                 else
                 {
-                    for(int idx{0};idx < solver_param_.n_ineq;idx++)
+                    nw = solver_param_.nw;
+                }
+                
+                if(do_init)
+                {
+                    std::vector<double> weight_k(nw*nw,0);
+
+                    // weight p 
+                    weight_k[0] = weight_vec.at("p")[0];
+                    weight_k[1 + nw] = weight_vec.at("p")[1];
+                    weight_k[2 + 2*nw] = weight_vec.at("p")[2];
+
+                    // weight quat
+                    weight_k[3 + 3*nw] = weight_vec.at("quat")[0];
+                    weight_k[4 + 4*nw] = weight_vec.at("quat")[1];
+                    weight_k[5 + 5*nw] = weight_vec.at("quat")[2];
+
+                    // weight q
+                    // weight dq
+                    int count{0};
+                    for(auto idx : solver_param_.subsystems_map_joint[problem])
                     {
-                        weight_k.push_back(1);
+                        weight_k[6 + count + (6+count)*nw] = weight_vec.at("q")[0];
+                        weight_k[12 + 6 + count + (12+count+6)*nw] = weight_vec.at("dq")[0];
+                        count++;
                     }
+                
+                    // weight dp
+                    weight_k[6 + count + (6+count)*nw] = weight_vec.at("dp")[0];
+                    weight_k[7 + count + (7+count)*nw] = weight_vec.at("dp")[1];
+                    weight_k[8 + count + (8+count)*nw] = weight_vec.at("dp")[2];
+
+                    // weight omega
+                    weight_k[9 + count + (9+count)*nw] = weight_vec.at("omega")[0];
+                    weight_k[10 + count + (10+count)*nw] = weight_vec.at("omega")[1];
+                    weight_k[11 + count + (11+count)*nw] = weight_vec.at("omega")[2];
+
+                    count+=6;
+                    // weight foot
+                    for(auto idx : solver_param_.subsystems_map_contact[problem])
+                    {   
+                        if (param.at("contact_seq")[k][idx] == 1)
+                        {
+                            weight_k[12 + count + (12+count)*nw] = weight_vec.at("foot_stance")[0];
+                            weight_k[13 + count + (13+count)*nw] = weight_vec.at("foot_stance")[1];
+                            weight_k[14 + count + (14+count)*nw] = weight_vec.at("foot_stance")[2];
+                        }
+                        else
+                        {
+                            weight_k[12 + count + (12+count)*nw] = weight_vec.at("foot_swing")[0];
+                            weight_k[13 + count + (13+count)*nw] = weight_vec.at("foot_swing")[1];
+                            weight_k[14 + count + (14+count)*nw] = weight_vec.at("foot_swing")[2];
+                        }
+                        count+=3;
+                    }
+                    if (k < solver_param_.N_)
+                    {
+                        // weight tau
+                        for(auto idx : solver_param_.subsystems_map_joint[problem])
+                        {
+                            weight_k[12 + count + (12+count)*nw] = weight_vec.at("tau")[0];
+                            count++;
+                        }
+                        // weight grf
+                        for(auto idx : solver_param_.subsystems_map_contact["wb"])
+                        {
+                            weight_k[12 + count + (12+count)*nw] = weight_vec.at("grf")[0];
+                            weight_k[13 + count + (13+count)*nw] = weight_vec.at("grf")[0];
+                            weight_k[14 + count + (14+count)*nw] = weight_vec.at("grf")[0];
+                            count+=3;
+                        }
+                        // weight consensus 
+                        weight_k[15 + count + (15+count)*nw] = weight_vec.at("consensus")[0];
+                        weight_k[16 + count + (16+count)*nw] = weight_vec.at("consensus")[0];
+                        weight_k[17 + count + (17+count)*nw] = weight_vec.at("consensus")[0];
+                        weight_k[18 + count + (18+count)*nw] = weight_vec.at("consensus")[0];
+                        weight_k[19 + count + (19+count)*nw] = weight_vec.at("consensus")[0];
+                        weight_k[20 + count + (20+count)*nw] = weight_vec.at("consensus")[0];
+
+                        if(k == 0)
+                        {
+                            for(int idx{0};idx < solver_param_.n_ineq_0;idx++)
+                            {
+                                weight_k[24 + count + (24+count)*nw] = 1;
+                                count++;
+                            }
+                        }
+                        else
+                        {  
+                            for(int idx{0};idx < solver_param_.n_ineq;idx++)
+                            {
+                                weight_k[24 + count+ (24+count)*nw] = 1;
+                                count++;
+                            }
+                        }
+                    }
+                    problem_weight.push_back(weight_k);
                 }
-                problem_weight.push_back(weight_k);
-                //set the constraints
-                std::vector<double> constraints_k{};
-                if (k == 0)
-                {
-                    constraints_k = solver_param_.lh0;
-                }
-                else
-                {
-                    constraints_k = solver_param_.lh;
-                }
-                for(auto leg : solver_param_.subsystems_map_contact["wb"])
-                {
-                    constraints_k[5*leg] = param.at("contact_seq")[k][leg]*5;
-                }
-                problem_constraints.push_back(constraints_k);                
+                // // set the constraints
+                // std::vector<double> constraints_k{};
+                // if (k == 0)
+                // {
+                    // constraints_k = solver_param_.lh0;
+                // }
+                // else
+                // {
+                    // constraints_k = solver_param_.lh;
+                // }
+                // for(auto leg : solver_param_.subsystems_map_contact["wb"])
+                // {
+                    // constraints_k[5*leg] = param.at("contact_seq")[k][leg]*5;
+                // }
+                // problem_constraints.push_back(constraints_k);                
             }
             // pass to the acados sovler
             acados_interface_.setParameter(problem_param,static_cast<int>(problem_param[0].size()),problem);
             acados_interface_.setReference(problem_ref,static_cast<int>(problem_ref[0].size()),static_cast<int>(problem_ref[1].size()),static_cast<int>(problem_ref[solver_param_.N_].size())-solver_param_.n_ineq,problem); 
-            acados_interface_.setWeight(problem_weight,static_cast<int>(problem_ref[0].size()),static_cast<int>(problem_ref[1].size()),static_cast<int>(problem_ref[solver_param_.N_].size())-solver_param_.n_ineq,problem);   
+            // auto start_Weight = std::chrono::high_resolution_clock::now();
+            if(do_init)
+            {
+                acados_interface_.setWeight(problem_weight,solver_param_.nw0,solver_param_.nw,solver_param_.nwe,problem);
+            }
+            // auto stop_Weight = std::chrono::high_resolution_clock::now();
             acados_interface_.setInitialCondition(problem_inital_condition,problem);    
             // acados_interface_.setConstraints(problem_constraints,static_cast<int>(problem_constraints[0].size()),static_cast<int>(problem_constraints[1].size()),problem);
         }
@@ -540,6 +566,13 @@ void dsolver::solve( bool &do_init,
                 data_[problem].dual[k][3] += (data_[problem].omega[k][0] - data_["wb"].omega[k][0])*weight_vec.at("consensus")[0];
                 data_[problem].dual[k][4] += (data_[problem].omega[k][1] - data_["wb"].omega[k][1])*weight_vec.at("consensus")[0];
                 data_[problem].dual[k][5] += (data_[problem].omega[k][2] - data_["wb"].omega[k][2])*weight_vec.at("consensus")[0];
+
+                data_[problem].residual[k][0] = (data_[problem].dp[k][0] - data_["wb"].dp[k][0]);
+                data_[problem].residual[k][1] = (data_[problem].dp[k][1] - data_["wb"].dp[k][1]);
+                data_[problem].residual[k][2] = (data_[problem].dp[k][2] - data_["wb"].dp[k][2]);
+                data_[problem].residual[k][3] = (data_[problem].omega[k][0] - data_["wb"].omega[k][0]);
+                data_[problem].residual[k][4] = (data_[problem].omega[k][1] - data_["wb"].omega[k][1]);
+                data_[problem].residual[k][5] = (data_[problem].omega[k][2] - data_["wb"].omega[k][2]);
             }
             // for (int k{0};k<solver_param_.N_;k++)
             // {
