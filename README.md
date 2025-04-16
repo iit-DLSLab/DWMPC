@@ -75,6 +75,16 @@ export PYTHONPATH=$PYTHONPATH:/usr/lib/dls2/controllers/dwmpc
 ### 5. To run the example
 For running the example scripts, install the `gym-quadruped` environment from the the [official repository](https://github.com/iit-DLSLab/gym-quadruped)
 
+### To Build a new model
+To build a the controller for a different robot use `generate_ocp.py`. You just need to change the urdf path in:
+
+https://github.com/iit-DLSLab/DWMPC/blob/1701f91b5086806b8e043fb152ec693e9c79c55b/generate_ocp.py#L438C1-L438C76
+
+and provide the joint names in sequence and end-effector name in :
+`joints_name_list`,`contact_frame_name_list` (this is step is not neccesary if you are using one of the provided urdfs)
+
+Changes in the config.yaml are provided for Go1 and Go2. 
+
 ## Citing this work
 
 ```bibtex
