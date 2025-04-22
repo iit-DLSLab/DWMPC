@@ -16,9 +16,6 @@ state_observables_names = tuple(QuadrupedEnv.ALL_OBS)  # return all available st
 
 sim_frequency = 200.0
 env = QuadrupedEnv(robot=robot_name,
-                   hip_height=0.25,
-                   legs_joint_names=robot_leg_joints,  # Joint names of the legs DoF
-                   feet_geom_name=robot_feet_geom_names,  # Geom/Frame id of feet
                    scene=scene_name,
                    sim_dt = 1/sim_frequency,  # Simulation time step [s]
                    ref_base_lin_vel=0.0, # Constant magnitude of reference base linear velocity [m/s]
