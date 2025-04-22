@@ -41,12 +41,6 @@
       </geometry>
     </visual>
   </link>
-  <joint name="floating_base" type="floating">
-    <origin rpy="0 0 0" xyz="0 0 0"/>
-    <parent link="base"/>
-    <child link="trunk"/>
-  </joint>
-
  <link name="trunk">
     <visual >
       <origin rpy="0 0 0" xyz="0 0 0"/>
